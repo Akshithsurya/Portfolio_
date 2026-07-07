@@ -127,14 +127,7 @@ A Node.js CLI productivity tool — context tracking, urgency-coded tasks, cron-
 
 ---
 
-### Orbit
 
-<div align="center">
-
-![GitHub Stats](https://github-readme-stats.vercel.app/api?username=Akshithsurya&show_icons=true&theme=transparent&hide_border=true&title_color=D4AF37&icon_color=8B0000&text_color=333333)
-![Top Languages](https://github-readme-stats.vercel.app/api/top-langs/?username=Akshithsurya&layout=compact&theme=transparent&hide_border=true&title_color=D4AF37&text_color=333333)
-
-</div>
 
 ---
 
