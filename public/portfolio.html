@@ -1,0 +1,2212 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Ari Vega — Creative Developer</title>
+<meta name="description" content="Ari Vega is a creative developer and interaction engineer building cinematic, motion-driven web experiences with WebGL, Three.js, and modern frontend tooling." />
+<meta name="color-scheme" content="dark" />
+<meta name="theme-color" content="#0a0a0c" />
+<style>
+/* ============================================================
+   Ari Vega — Creative Developer  |  self-contained portfolio
+   Dark cinematic evening aesthetic. No external dependencies.
+   ============================================================ */
+
+:root{
+  --bg:#0a0a0c;
+  --bg-2:#0d0d10;
+  --bg-3:#111115;
+  --panel:#0f0f13;
+  --panel-2:#131318;
+  --text:#ececea;
+  --text-dim:#a6a69e;
+  --text-mute:#6a6a63;
+  --amber:#f0a868;
+  --amber-2:#e8a05c;
+  --amber-soft:rgba(240,168,104,0.12);
+  --teal:#5fb8a8;
+  --teal-soft:rgba(95,184,168,0.12);
+  --line:rgba(236,236,234,0.07);
+  --line-2:rgba(236,236,234,0.13);
+  --line-amber:rgba(240,168,104,0.25);
+
+  --sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --serif: ui-serif, Georgia, Cambria, "Times New Roman", serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+
+  --maxw:1180px;
+  --pad:clamp(1.15rem, 4.2vw, 3.25rem);
+  --radius:14px;
+
+  --ease:cubic-bezier(.2,.7,.2,1);
+  --ease-out:cubic-bezier(.16,1,.3,1);
+}
+
+*,*::before,*::after{ box-sizing:border-box; }
+html{ -webkit-text-size-adjust:100%; scroll-behavior:smooth; }
+html,body{ background:var(--bg); color:var(--text); }
+body{
+  margin:0;
+  font-family:var(--sans);
+  font-size:16px;
+  line-height:1.65;
+  font-weight:400;
+  letter-spacing:0.005em;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  cursor:none;
+  overflow-x:hidden;
+  text-rendering:optimizeLegibility;
+}
+@media (hover:none) and (pointer:coarse){
+  body{ cursor:auto; }
+}
+
+/* ---------- selection ---------- */
+::selection{ background:var(--amber); color:#0a0a0c; }
+
+/* ---------- scrollbar ---------- */
+::-webkit-scrollbar{ width:10px; height:10px; }
+::-webkit-scrollbar-track{ background:var(--bg); }
+::-webkit-scrollbar-thumb{ background:#1d1d22; border-radius:8px; border:2px solid var(--bg); }
+::-webkit-scrollbar-thumb:hover{ background:#2a2a30; }
+
+/* ---------- film grain overlay ---------- */
+.grain{
+  position:fixed; inset:-50%;
+  width:200%; height:200%;
+  pointer-events:none;
+  z-index:9990;
+  opacity:.045;
+  mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation:grain 8s steps(6) infinite;
+  will-change:transform;
+}
+@keyframes grain{
+  0%{transform:translate(0,0)}
+  20%{transform:translate(-4%,3%)}
+  40%{transform:translate(3%,-4%)}
+  60%{transform:translate(-3%,2%)}
+  80%{transform:translate(2%,-2%)}
+  100%{transform:translate(0,0)}
+}
+
+/* ---------- custom cursor ---------- */
+#c-dot,#c-cross{
+  position:fixed; top:0; left:0;
+  pointer-events:none;
+  z-index:9999;
+  border-radius:50%;
+  transform:translate3d(-50%,-50%,0);
+  mix-blend-mode:normal;
+  transition:opacity .25s var(--ease);
+}
+#c-dot{
+  width:6px; height:6px;
+  background:var(--amber);
+  box-shadow:0 0 8px rgba(240,168,104,.6);
+}
+#c-cross{
+  width:34px; height:34px;
+  border:1px solid rgba(236,236,234,.45);
+  transition:width .28s var(--ease), height .28s var(--ease),
+             border-color .28s var(--ease), background .28s var(--ease),
+             opacity .25s var(--ease);
+}
+#c-cross::before, #c-cross::after{
+  content:""; position:absolute; background:var(--amber); opacity:0;
+  transition:opacity .28s var(--ease);
+}
+#c-cross::before{ width:8px; height:1px; top:50%; left:50%; transform:translate(-50%,-50%); }
+#c-cross::after{ width:1px; height:8px; top:50%; left:50%; transform:translate(-50%,-50%); }
+body.cursor-hover #c-cross{
+  width:52px; height:52px;
+  border-color:var(--amber);
+  background:rgba(240,168,104,.06);
+}
+body.cursor-hover #c-cross::before,
+body.cursor-hover #c-cross::after{ opacity:1; }
+body.cursor-hover #c-dot{ opacity:0; }
+body.cursor-hidden #c-dot, body.cursor-hidden #c-cross{ opacity:0 !important; }
+@media (hover:none) and (pointer:coarse){
+  #c-dot,#c-cross{ display:none; }
+}
+
+/* ---------- hero canvas ---------- */
+#bg-canvas{
+  position:fixed; inset:0;
+  width:100%; height:100%;
+  z-index:0;
+  pointer-events:none;
+  opacity:.9;
+}
+
+/* ---------- layout ---------- */
+.wrap{
+  width:100%; max-width:var(--maxw);
+  margin:0 auto;
+  padding-left:var(--pad); padding-right:var(--pad);
+  position:relative;
+}
+main{ position:relative; z-index:1; }
+
+/* hairline label */
+.eyebrow{
+  font-family:var(--mono);
+  font-size:.7rem;
+  letter-spacing:.22em;
+  text-transform:uppercase;
+  color:var(--text-mute);
+  display:inline-flex; align-items:center; gap:.6rem;
+}
+.eyebrow::before{
+  content:""; width:18px; height:1px; background:var(--amber); display:inline-block;
+}
+.eyebrow.center::before{ display:none; }
+
+/* ---------- header / nav ---------- */
+header.site{
+  position:fixed; top:0; left:0; right:0;
+  z-index:100;
+  transition:background .4s var(--ease), border-color .4s var(--ease), backdrop-filter .4s var(--ease);
+  border-bottom:1px solid transparent;
+}
+header.site.scrolled{
+  background:rgba(10,10,12,.66);
+  backdrop-filter:blur(14px) saturate(120%);
+  -webkit-backdrop-filter:blur(14px) saturate(120%);
+  border-bottom:1px solid var(--line);
+}
+.nav{
+  display:flex; align-items:center; justify-content:space-between;
+  height:64px;
+  width:100%; max-width:var(--maxw);
+  margin:0 auto;
+  padding-left:var(--pad); padding-right:var(--pad);
+}
+.brand{
+  display:inline-flex; align-items:center; gap:.6rem;
+  text-decoration:none; color:var(--text);
+  font-family:var(--mono);
+  font-size:.82rem; letter-spacing:.16em;
+}
+.brand .mono-mark{
+  width:30px; height:30px;
+  display:grid; place-items:center;
+  border:1px solid var(--line-2);
+  border-radius:7px;
+  font-family:var(--serif);
+  font-style:italic;
+  font-size:.95rem;
+  color:var(--amber);
+  background:linear-gradient(180deg, rgba(240,168,104,.08), transparent);
+  transition:border-color .3s var(--ease), transform .3s var(--ease);
+}
+.brand:hover .mono-mark{ border-color:var(--amber); transform:rotate(-4deg); }
+
+.nav-links{
+  display:flex; align-items:center; gap:.2rem;
+  list-style:none; margin:0; padding:0;
+}
+.nav-links a{
+  position:relative;
+  display:inline-flex; align-items:center;
+  padding:.55rem .85rem;
+  font-family:var(--mono);
+  font-size:.74rem; letter-spacing:.12em;
+  text-transform:uppercase;
+  color:var(--text-dim);
+  text-decoration:none;
+  transition:color .3s var(--ease);
+}
+.nav-links a::after{
+  content:""; position:absolute; left:.85rem; right:.85rem; bottom:.3rem;
+  height:1px; background:var(--amber);
+  transform:scaleX(0); transform-origin:left;
+  transition:transform .35s var(--ease);
+}
+.nav-links a:hover, .nav-links a.active{ color:var(--text); }
+.nav-links a:hover::after, .nav-links a.active::after{ transform:scaleX(1); }
+
+.status-pill{
+  display:inline-flex; align-items:center; gap:.5rem;
+  margin-left:.6rem;
+  padding:.4rem .7rem;
+  border:1px solid var(--line-2);
+  border-radius:999px;
+  font-family:var(--mono);
+  font-size:.66rem; letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--text-dim);
+  background:rgba(95,184,168,.04);
+}
+.status-pill .dot{
+  width:7px; height:7px; border-radius:50%;
+  background:var(--teal);
+  box-shadow:0 0 0 0 rgba(95,184,168,.6);
+  animation:pulse 2.4s var(--ease) infinite;
+}
+@keyframes pulse{
+  0%{ box-shadow:0 0 0 0 rgba(95,184,168,.55); }
+  70%{ box-shadow:0 0 0 8px rgba(95,184,168,0); }
+  100%{ box-shadow:0 0 0 0 rgba(95,184,168,0); }
+}
+
+/* mobile nav toggle */
+.nav-toggle{
+  display:none;
+  background:none; border:1px solid var(--line-2);
+  border-radius:8px; padding:.5rem .6rem;
+  color:var(--text); font-family:var(--mono); font-size:.7rem;
+  letter-spacing:.1em; cursor:none;
+}
+@media (max-width:760px){
+  .nav-links, .status-pill{ display:none; }
+  .nav-toggle{ display:inline-flex; }
+  .nav-links.open{
+    display:flex; flex-direction:column; align-items:flex-start;
+    position:absolute; top:64px; left:0; right:0;
+    background:rgba(10,10,12,.96);
+    backdrop-filter:blur(14px);
+    border-bottom:1px solid var(--line);
+    padding:1rem var(--pad); gap:.2rem;
+  }
+  .nav-links.open a{ padding:.7rem .4rem; }
+}
+
+/* ---------- hero ---------- */
+.hero{
+  position:relative;
+  min-height:100vh;
+  display:flex; flex-direction:column; justify-content:center;
+  padding-top:120px; padding-bottom:80px;
+  overflow:hidden;
+}
+.hero .eyebrow{ margin-bottom:1.8rem; }
+.hero-name{
+  font-family:var(--sans);
+  font-weight:600;
+  font-size:clamp(3.2rem, 13vw, 9.5rem);
+  line-height:.92;
+  letter-spacing:-0.04em;
+  margin:0;
+  display:flex; flex-direction:column;
+}
+.hero-name .word{
+  display:inline-block;
+  overflow:hidden;
+}
+.hero-name .word > span{
+  display:inline-block;
+  transform:translateY(110%);
+  animation:rise .9s var(--ease-out) forwards;
+}
+.hero-name .word:nth-child(2) > span{ animation-delay:.12s; }
+.hero-name .w-fill{ color:var(--text); }
+.hero-name .w-outline{
+  color:transparent;
+  -webkit-text-stroke:1.4px var(--amber);
+  margin-left:clamp(.5rem, 2.5vw, 2rem);
+  transition:color .5s var(--ease), -webkit-text-stroke-color .5s var(--ease);
+}
+.hero-name .w-outline:hover{ color:var(--amber); }
+@keyframes rise{ to{ transform:translateY(0); } }
+
+.hero-role{
+  margin-top:1.6rem;
+  font-family:var(--mono);
+  font-size:clamp(.8rem, 1.4vw, .95rem);
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  color:var(--text-dim);
+  opacity:0;
+  animation:fade .8s var(--ease) .5s forwards;
+}
+.hero-role .sep{ color:var(--amber); margin:0 .5rem; }
+.hero-tagline{
+  margin-top:1.4rem;
+  max-width:46ch;
+  font-size:clamp(1rem, 1.5vw, 1.18rem);
+  color:var(--text-dim);
+  line-height:1.6;
+  opacity:0;
+  animation:fade .8s var(--ease) .7s forwards;
+}
+@keyframes fade{ to{ opacity:1; } }
+
+.hero-meta{
+  margin-top:3rem;
+  display:flex; flex-wrap:wrap; gap:2.4rem;
+  opacity:0;
+  animation:fade .8s var(--ease) .9s forwards;
+}
+.hero-meta .item{
+  font-family:var(--mono);
+  font-size:.72rem; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--text-mute);
+}
+.hero-meta .item b{ color:var(--text); font-weight:500; }
+
+.scroll-hint{
+  position:absolute; left:var(--pad); bottom:1.6rem;
+  display:flex; align-items:center; gap:.7rem;
+  font-family:var(--mono); font-size:.66rem;
+  letter-spacing:.2em; text-transform:uppercase;
+  color:var(--text-mute);
+  opacity:0;
+  animation:fade 1s var(--ease) 1.3s forwards;
+}
+.scroll-hint .mouse{
+  width:20px; height:32px; border:1px solid var(--line-2);
+  border-radius:10px; position:relative;
+}
+.scroll-hint .mouse::after{
+  content:""; position:absolute; top:6px; left:50%; transform:translateX(-50%);
+  width:2px; height:6px; background:var(--amber); border-radius:2px;
+  animation:scrolldot 1.8s var(--ease) infinite;
+}
+@keyframes scrolldot{
+  0%{ transform:translate(-50%,0); opacity:1; }
+  60%{ transform:translate(-50%,10px); opacity:0; }
+  100%{ transform:translate(-50%,0); opacity:0; }
+}
+
+/* ---------- section base ---------- */
+section.block{
+  position:relative;
+  padding:clamp(5rem, 11vh, 8rem) 0;
+  border-top:1px solid var(--line);
+}
+.section-head{
+  display:flex; align-items:flex-end; justify-content:space-between;
+  gap:2rem; flex-wrap:wrap;
+  margin-bottom:clamp(2.5rem, 5vw, 4rem);
+}
+.section-title{
+  font-family:var(--sans);
+  font-weight:500;
+  font-size:clamp(1.9rem, 4.6vw, 3.3rem);
+  line-height:1.05;
+  letter-spacing:-0.025em;
+  margin:.6rem 0 0;
+}
+.section-title em{
+  font-family:var(--serif);
+  font-style:italic;
+  font-weight:400;
+  color:var(--amber);
+}
+.section-index{
+  font-family:var(--mono);
+  font-size:.7rem; letter-spacing:.18em; text-transform:uppercase;
+  color:var(--text-mute);
+}
+
+/* ---------- about ---------- */
+.about-grid{
+  display:grid;
+  grid-template-columns:1.1fr .9fr;
+  gap:clamp(2rem, 6vw, 5rem);
+  align-items:start;
+}
+.about-copy p{
+  color:var(--text-dim);
+  font-size:1.05rem;
+  line-height:1.75;
+  margin:0 0 1.3rem;
+}
+.about-copy p strong{ color:var(--text); font-weight:500; }
+.about-copy p .ac{ color:var(--amber); }
+.stats{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:1px;
+  background:var(--line);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  overflow:hidden;
+}
+.stat{
+  background:var(--bg-2);
+  padding:1.6rem 1.4rem;
+  transition:background .35s var(--ease);
+}
+.stat:hover{ background:var(--bg-3); }
+.stat .num{
+  font-family:var(--serif);
+  font-size:clamp(2rem, 4vw, 2.8rem);
+  font-weight:500;
+  color:var(--text);
+  line-height:1;
+  display:flex; align-items:baseline; gap:.15rem;
+}
+.stat .num span{ color:var(--amber); font-size:.6em; }
+.stat .lbl{
+  margin-top:.7rem;
+  font-family:var(--mono);
+  font-size:.68rem; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--text-mute);
+}
+@media (max-width:820px){
+  .about-grid{ grid-template-columns:1fr; }
+}
+
+/* ---------- kinetic marquee ---------- */
+.marquee{
+  position:relative;
+  overflow:hidden;
+  border-top:1px solid var(--line);
+  border-bottom:1px solid var(--line);
+  padding:1.4rem 0;
+  background:linear-gradient(90deg, rgba(240,168,104,.02), transparent 30%, transparent 70%, rgba(95,184,168,.02));
+}
+.marquee-track{
+  display:flex; width:max-content;
+  animation:marquee 38s linear infinite;
+}
+.marquee:hover .marquee-track{ animation-play-state:paused; }
+.marquee-item{
+  font-family:var(--serif);
+  font-style:italic;
+  font-size:clamp(1.4rem, 3.4vw, 2.4rem);
+  color:var(--text);
+  padding:0 1.6rem;
+  display:inline-flex; align-items:center; gap:1.6rem;
+  white-space:nowrap;
+}
+.marquee-item .star{
+  color:var(--amber); font-style:normal;
+  font-family:var(--mono); font-size:.7em;
+  transform:translateY(-.1em);
+}
+.marquee-item.dim{ color:var(--text-mute); }
+@keyframes marquee{
+  from{ transform:translateX(0); }
+  to{ transform:translateX(-50%); }
+}
+
+/* ---------- work ---------- */
+.work-grid{
+  display:grid;
+  grid-template-columns:repeat(6, 1fr);
+  gap:clamp(1rem, 2vw, 1.6rem);
+}
+.card{
+  grid-column:span 3;
+  position:relative;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  overflow:hidden;
+  background:var(--panel);
+  text-decoration:none; color:inherit;
+  transition:transform .45s var(--ease), border-color .45s var(--ease), box-shadow .45s var(--ease);
+}
+.card:nth-child(1),.card:nth-child(6){ grid-column:span 4; }
+.card:nth-child(2),.card:nth-child(5){ grid-column:span 2; }
+.card:nth-child(3),.card:nth-child(4){ grid-column:span 3; }
+@media (max-width:820px){
+  .work-grid{ grid-template-columns:1fr; }
+  .card,.card:nth-child(n){ grid-column:span 1; }
+}
+.card:hover{
+  transform:translateY(-5px);
+  border-color:var(--line-amber);
+  box-shadow:0 18px 50px -20px rgba(0,0,0,.7);
+}
+.thumb{
+  position:relative;
+  aspect-ratio:16/9;
+  overflow:hidden;
+  border-bottom:1px solid var(--line);
+}
+.thumb .grad{ position:absolute; inset:0; transition:transform .8s var(--ease); }
+.card:hover .thumb .grad{ transform:scale(1.05); }
+.thumb svg{ position:absolute; inset:0; width:100%; height:100%; }
+.thumb .badge{
+  position:absolute; top:.8rem; left:.8rem;
+  font-family:var(--mono); font-size:.62rem; letter-spacing:.16em;
+  text-transform:uppercase; color:var(--text-dim);
+  padding:.25rem .5rem; border:1px solid var(--line-2);
+  border-radius:6px; background:rgba(10,10,12,.55);
+  backdrop-filter:blur(6px);
+}
+.card-body{ padding:1.4rem 1.5rem 1.6rem; }
+.card-title{
+  display:flex; align-items:baseline; justify-content:space-between; gap:1rem;
+  font-size:1.25rem; font-weight:500; letter-spacing:-0.01em;
+  margin:0 0 .5rem;
+}
+.card-title .yr{
+  font-family:var(--mono); font-size:.7rem; color:var(--text-mute);
+  letter-spacing:.1em;
+}
+.card-desc{
+  color:var(--text-dim); font-size:.92rem; line-height:1.55;
+  margin:0 0 1.1rem;
+}
+.card-tags{ display:flex; flex-wrap:wrap; gap:.4rem; }
+.tag{
+  font-family:var(--mono); font-size:.62rem; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--text-mute);
+  padding:.22rem .5rem; border:1px solid var(--line); border-radius:5px;
+}
+.card .accent-line{
+  position:absolute; left:0; bottom:0; height:2px; width:0;
+  background:linear-gradient(90deg, var(--amber), var(--teal));
+  transition:width .5s var(--ease);
+}
+.card:hover .accent-line{ width:100%; }
+
+/* thumb gradient recipes */
+.g-lumen{ background:radial-gradient(120% 120% at 20% 10%, #2a1a12 0%, #140d0a 40%, #0a0a0c 100%); }
+.g-tessera{ background:linear-gradient(135deg, #1a140e 0%, #221a14 50%, #0e0c0b 100%); }
+.g-halcyon{ background:linear-gradient(135deg, #0e1a1a 0%, #12211c 45%, #0a0f10 100%); }
+.g-aperture{ background:radial-gradient(100% 100% at 80% 20%, #281a10 0%, #160f0b 50%, #0a0a0c 100%); }
+.g-nimbus{ background:linear-gradient(135deg, #11161a 0%, #0d1416 50%, #0a0c0e 100%); }
+.g-echo{ background:linear-gradient(135deg, #1a1216 0%, #15101a 50%, #0a0a0c 100%); }
+
+/* ---------- skills ---------- */
+.skills-grid{
+  display:grid;
+  grid-template-columns:repeat(2, 1fr);
+  gap:1px;
+  background:var(--line);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  overflow:hidden;
+}
+.skill-cat{
+  background:var(--bg-2);
+  padding:1.8rem 1.6rem;
+  transition:background .35s var(--ease);
+}
+.skill-cat:hover{ background:var(--bg-3); }
+.skill-cat .cat-head{
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:1.4rem;
+}
+.skill-cat .cat-name{
+  font-family:var(--mono); font-size:.74rem; letter-spacing:.16em;
+  text-transform:uppercase; color:var(--text);
+}
+.skill-cat .cat-num{ font-family:var(--mono); font-size:.66rem; color:var(--text-mute); }
+.skill-row{
+  display:flex; align-items:center; gap:1rem;
+  margin-bottom:1rem;
+}
+.skill-row:last-child{ margin-bottom:0; }
+.skill-row .name{
+  flex:0 0 8.5rem;
+  font-size:.88rem; color:var(--text-dim);
+}
+.skill-row .bar{
+  flex:1; height:3px; background:var(--line); border-radius:3px; overflow:hidden;
+}
+.skill-row .bar > i{
+  display:block; height:100%; width:0;
+  background:linear-gradient(90deg, var(--amber), var(--amber-2));
+  border-radius:3px;
+  transition:width 1s var(--ease-out);
+}
+.skill-row .pct{
+  flex:0 0 2.6rem; text-align:right;
+  font-family:var(--mono); font-size:.7rem; color:var(--text-mute);
+}
+@media (max-width:760px){
+  .skills-grid{ grid-template-columns:1fr; }
+  .skill-row .name{ flex:0 0 6.5rem; }
+}
+
+.pills-row{
+  display:flex; flex-wrap:wrap; gap:.5rem;
+  margin-top:1.2rem;
+}
+.pill{
+  font-family:var(--mono); font-size:.68rem; letter-spacing:.08em;
+  color:var(--text-dim);
+  padding:.35rem .7rem;
+  border:1px solid var(--line-2);
+  border-radius:999px;
+  transition:border-color .3s var(--ease), color .3s var(--ease), background .3s var(--ease);
+}
+.pill:hover{ border-color:var(--amber); color:var(--amber); background:var(--amber-soft); }
+
+/* ---------- contact ---------- */
+.contact-cta{
+  display:flex; flex-direction:column; align-items:flex-start;
+  gap:2rem;
+}
+.cta-head .eyebrow{ margin-bottom:1.2rem; }
+.cta-head h2{
+  font-family:var(--sans);
+  font-weight:500;
+  font-size:clamp(2.2rem, 6vw, 4.2rem);
+  line-height:1.02; letter-spacing:-0.03em;
+  margin:0;
+}
+.cta-head h2 em{ font-family:var(--serif); font-style:italic; font-weight:400; color:var(--amber); }
+
+.magnetic-wrap{
+  position:relative; display:inline-block;
+  margin-top:.5rem;
+}
+.magnetic-btn{
+  position:relative;
+  display:inline-flex; align-items:center; gap:.8rem;
+  padding:1.15rem 2rem;
+  border:1px solid var(--amber);
+  border-radius:999px;
+  background:transparent;
+  color:var(--amber);
+  font-family:var(--mono); font-size:.82rem; letter-spacing:.14em; text-transform:uppercase;
+  text-decoration:none;
+  cursor:none;
+  overflow:hidden;
+  transition:color .35s var(--ease), border-color .35s var(--ease);
+  will-change:transform;
+}
+.magnetic-btn .fill{
+  position:absolute; inset:0; z-index:0;
+  background:var(--amber);
+  transform:scaleX(0); transform-origin:left;
+  transition:transform .5s var(--ease);
+}
+.magnetic-btn span{ position:relative; z-index:1; }
+.magnetic-btn .arrow{ transition:transform .35s var(--ease); }
+.magnetic-btn:hover{ color:#0a0a0c; }
+.magnetic-btn:hover .fill{ transform:scaleX(1); }
+.magnetic-btn:hover .arrow{ transform:translateX(4px); }
+.magnetic-btn:active{ transform:scale(.97); }
+
+.contact-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:clamp(2rem, 5vw, 4rem);
+  margin-top:clamp(3rem, 7vw, 5rem);
+}
+.contact-info{ display:flex; flex-direction:column; gap:1.8rem; }
+.info-block .lbl{
+  font-family:var(--mono); font-size:.68rem; letter-spacing:.16em;
+  text-transform:uppercase; color:var(--text-mute);
+  margin-bottom:.5rem;
+}
+.info-block a{
+  color:var(--text); text-decoration:none;
+  font-size:1.15rem;
+  background-image:linear-gradient(var(--amber),var(--amber));
+  background-size:0% 1px; background-position:0 100%; background-repeat:no-repeat;
+  transition:background-size .4s var(--ease), color .3s var(--ease);
+}
+.info-block a:hover{ color:var(--amber); background-size:100% 1px; }
+.socials{ display:flex; flex-wrap:wrap; gap:1.2rem; }
+.socials a{
+  font-family:var(--mono); font-size:.74rem; letter-spacing:.12em;
+  text-transform:uppercase; color:var(--text-dim); text-decoration:none;
+  position:relative; padding-bottom:.15rem;
+}
+.socials a::after{
+  content:""; position:absolute; left:0; right:0; bottom:0; height:1px;
+  background:var(--amber); transform:scaleX(0); transform-origin:left;
+  transition:transform .35s var(--ease);
+}
+.socials a:hover{ color:var(--text); }
+.socials a:hover::after{ transform:scaleX(1); }
+
+/* form */
+.form{
+  display:flex; flex-direction:column; gap:1.1rem;
+  padding:clamp(1.5rem, 3vw, 2rem);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  background:linear-gradient(180deg, var(--panel) 0%, var(--bg-2) 100%);
+}
+.field{ display:flex; flex-direction:column; gap:.4rem; }
+.field label{
+  font-family:var(--mono); font-size:.66rem; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--text-mute);
+}
+.field input, .field textarea{
+  background:transparent;
+  border:none; border-bottom:1px solid var(--line-2);
+  padding:.6rem 0;
+  color:var(--text);
+  font-family:var(--sans); font-size:.98rem;
+  outline:none;
+  transition:border-color .3s var(--ease);
+  cursor:none;
+}
+.field input::placeholder, .field textarea::placeholder{ color:var(--text-mute); }
+.field input:focus, .field textarea:focus{ border-color:var(--amber); }
+.field textarea{ resize:vertical; min-height:90px; }
+.form .submit{
+  align-self:flex-start;
+  display:inline-flex; align-items:center; gap:.6rem;
+  padding:.8rem 1.4rem;
+  border:1px solid var(--line-2);
+  border-radius:8px;
+  background:var(--amber-soft);
+  color:var(--amber);
+  font-family:var(--mono); font-size:.74rem; letter-spacing:.14em;
+  text-transform:uppercase; cursor:none;
+  transition:border-color .3s var(--ease), background .3s var(--ease), transform .2s var(--ease);
+}
+.form .submit:hover{ border-color:var(--amber); background:rgba(240,168,104,.18); }
+.form .submit:active{ transform:translateY(1px); }
+@media (max-width:760px){
+  .contact-grid{ grid-template-columns:1fr; }
+}
+
+/* toast */
+.toast{
+  position:fixed; left:50%; bottom:2rem;
+  transform:translate(-50%, 140%);
+  z-index:200;
+  display:flex; align-items:center; gap:.7rem;
+  padding:.85rem 1.3rem;
+  border:1px solid var(--line-amber);
+  border-radius:10px;
+  background:rgba(15,15,19,.92);
+  backdrop-filter:blur(10px);
+  color:var(--text);
+  font-size:.88rem;
+  box-shadow:0 12px 40px -12px rgba(0,0,0,.6);
+  transition:transform .5s var(--ease-out);
+  pointer-events:none;
+}
+.toast.show{ transform:translate(-50%, 0); }
+.toast .ic{
+  width:18px; height:18px; border-radius:50%;
+  background:var(--teal); display:grid; place-items:center;
+  color:#0a0a0c; font-size:.7rem; font-weight:700;
+}
+
+/* ---------- footer ---------- */
+footer.site{
+  position:relative; z-index:1;
+  border-top:1px solid var(--line);
+  padding:2.4rem 0;
+  margin-top:auto;
+}
+.foot{
+  display:flex; align-items:center; justify-content:space-between;
+  gap:1.5rem; flex-wrap:wrap;
+  font-family:var(--mono); font-size:.72rem; letter-spacing:.1em;
+  color:var(--text-mute);
+}
+.foot a{
+  color:var(--text-dim); text-decoration:none;
+  transition:color .3s var(--ease);
+}
+.foot a:hover{ color:var(--amber); }
+.foot .made{ display:inline-flex; align-items:center; gap:.5rem; }
+.foot .made .heart{ color:var(--amber); }
+
+/* ---------- reveal ---------- */
+.reveal{
+  opacity:0;
+  transform:translateY(22px);
+  transition:opacity .6s var(--ease), transform .6s var(--ease);
+  transition-delay:var(--d, 0ms);
+}
+.reveal.in{ opacity:1; transform:none; }
+.reveal.stagger > *{
+  opacity:0; transform:translateY(18px);
+  transition:opacity .55s var(--ease), transform .55s var(--ease);
+}
+.reveal.stagger.in > *{ opacity:1; transform:none; }
+.reveal.stagger.in > *:nth-child(1){ transition-delay:60ms; }
+.reveal.stagger.in > *:nth-child(2){ transition-delay:130ms; }
+.reveal.stagger.in > *:nth-child(3){ transition-delay:200ms; }
+.reveal.stagger.in > *:nth-child(4){ transition-delay:270ms; }
+.reveal.stagger.in > *:nth-child(5){ transition-delay:340ms; }
+.reveal.stagger.in > *:nth-child(6){ transition-delay:410ms; }
+
+/* ---------- focus / a11y ---------- */
+:focus-visible{
+  outline:2px solid var(--amber);
+  outline-offset:3px;
+  border-radius:3px;
+}
+
+/* ---------- reduced motion ---------- */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:.001ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:.001ms !important;
+    scroll-behavior:auto !important;
+  }
+  .grain{ display:none; }
+  .reveal{ opacity:1; transform:none; }
+  .hero-name .word > span{ transform:none; }
+  .marquee-track{ animation:none; }
+}
+
+/* ---------- scroll progress bar ---------- */
+.scroll-progress{
+  position:fixed; top:0; left:0;
+  width:0%; height:2px;
+  background:linear-gradient(90deg, var(--amber) 0%, var(--amber-2) 100%);
+  z-index:9991;
+  pointer-events:none;
+  box-shadow:0 0 8px rgba(240,168,104,0.5);
+  transition:width .1s linear;
+}
+
+/* ---------- project filter ---------- */
+.filter-row{
+  display:flex; flex-wrap:wrap; gap:.5rem;
+  margin-bottom:2rem;
+}
+.filter-btn{
+  font-family:var(--mono); font-size:.7rem; letter-spacing:.12em;
+  text-transform:uppercase; color:var(--text-dim);
+  padding:.45rem .9rem;
+  border:1px solid var(--line-2); border-radius:6px;
+  background:transparent; cursor:none;
+  transition:color .3s var(--ease), border-color .3s var(--ease), background .3s var(--ease);
+}
+.filter-btn:hover{ color:var(--text); border-color:var(--line-amber); }
+.filter-btn.active{ color:var(--amber); border-color:var(--amber); background:var(--amber-soft); }
+.card.hide-filter{
+  opacity:0; transform:scale(0.92);
+  pointer-events:none;
+  position:absolute; visibility:hidden;
+}
+
+/* ---------- command palette ---------- */
+.cmd-overlay{
+  position:fixed; inset:0; z-index:9995;
+  background:rgba(10,10,12,0.75);
+  backdrop-filter:blur(8px);
+  display:none; align-items:flex-start; justify-content:center;
+  padding-top:14vh;
+  opacity:0; transition:opacity .25s var(--ease);
+}
+.cmd-overlay.open{ display:flex; opacity:1; }
+.cmd-box{
+  width:90%; max-width:520px;
+  background:var(--panel-2);
+  border:1px solid var(--line-2);
+  border-radius:12px;
+  box-shadow:0 24px 80px -20px rgba(0,0,0,0.8);
+  overflow:hidden;
+  transform:translateY(-12px);
+  transition:transform .3s var(--ease-out);
+}
+.cmd-overlay.open .cmd-box{ transform:translateY(0); }
+.cmd-input{
+  width:100%; padding:1rem 1.2rem;
+  background:transparent; border:none; border-bottom:1px solid var(--line);
+  color:var(--text); font-family:var(--sans); font-size:1rem;
+  outline:none; cursor:none;
+}
+.cmd-input::placeholder{ color:var(--text-mute); }
+.cmd-results{ max-height:320px; overflow-y:auto; }
+.cmd-item{
+  display:flex; align-items:center; gap:.8rem;
+  padding:.7rem 1.2rem;
+  cursor:none; border:none; background:transparent; width:100%; text-align:left;
+  color:var(--text-dim); font-family:var(--sans); font-size:.9rem;
+  transition:background .15s var(--ease), color .15s var(--ease);
+}
+.cmd-item:hover, .cmd-item.selected{
+  background:var(--amber-soft); color:var(--text);
+}
+.cmd-item .cmd-cat{
+  margin-left:auto;
+  font-family:var(--mono); font-size:.65rem; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--text-mute);
+}
+.cmd-hint{
+  position:fixed; top:50%; right:1.2rem; transform:translateY(-50%);
+  display:none;
+  z-index:9992;
+}
+@media(min-width:760px){
+  .cmd-hint{
+    display:inline-flex; align-items:center; gap:.4rem;
+    padding:.3rem .6rem;
+    border:1px solid var(--line-2); border-radius:6px;
+    font-family:var(--mono); font-size:.62rem; letter-spacing:.08em;
+    color:var(--text-mute);
+    transition:color .3s var(--ease), border-color .3s var(--ease);
+  }
+  .cmd-hint:hover{ color:var(--amber); border-color:var(--line-amber); }
+}
+.cmd-hint kbd{
+  font-family:var(--mono); font-size:.6rem;
+  padding:.1rem .3rem; border:1px solid var(--line-2); border-radius:3px;
+  color:var(--text-dim);
+}
+
+/* ---------- project detail modal ---------- */
+.modal-overlay{
+  position:fixed; inset:0; z-index:9996;
+  background:rgba(10,10,12,0.8);
+  backdrop-filter:blur(10px);
+  display:none; align-items:center; justify-content:center;
+  padding:2rem;
+  opacity:0; transition:opacity .3s var(--ease);
+}
+.modal-overlay.open{ display:flex; opacity:1; }
+.modal-box{
+  width:100%; max-width:600px;
+  max-height:85vh; overflow-y:auto;
+  background:var(--panel-2);
+  border:1px solid var(--line-2);
+  border-radius:16px;
+  box-shadow:0 32px 100px -20px rgba(0,0,0,0.85);
+  transform:scale(0.95) translateY(10px);
+  transition:transform .35s var(--ease-out);
+}
+.modal-overlay.open .modal-box{ transform:scale(1) translateY(0); }
+.modal-close{
+  position:absolute; top:1rem; right:1.2rem;
+  width:36px; height:36px; border-radius:50%;
+  border:1px solid var(--line-2); background:transparent;
+  color:var(--text-dim); font-size:1.2rem;
+  display:grid; place-items:center; cursor:none;
+  transition:color .25s var(--ease), border-color .25s var(--ease), background .25s var(--ease);
+  z-index:2;
+}
+.modal-close:hover{ color:var(--amber); border-color:var(--amber); background:var(--amber-soft); }
+.modal-thumb{
+  position:relative; height:200px; overflow:hidden;
+  border-radius:16px 16px 0 0;
+}
+.modal-thumb .grad{ position:absolute; inset:0; }
+.modal-body{ padding:2rem 2rem 2.4rem; position:relative; }
+.modal-badge{
+  position:absolute; top:-28px; left:2rem;
+  font-family:var(--mono); font-size:.66rem; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--amber);
+  padding:.35rem .8rem; border:1px solid var(--line-amber);
+  border-radius:6px; background:var(--panel-2);
+}
+.modal-title{
+  font-family:var(--serif); font-size:1.9rem; font-weight:400;
+  margin:0 0 .4rem; color:var(--text);
+}
+.modal-year{
+  font-family:var(--mono); font-size:.8rem; color:var(--text-mute);
+  margin-bottom:1rem;
+}
+.modal-desc{
+  font-size:1rem; line-height:1.7; color:var(--text-dim);
+  margin-bottom:1.4rem;
+}
+.modal-section-label{
+  font-family:var(--mono); font-size:.66rem; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--text-mute);
+  margin-bottom:.5rem;
+}
+.modal-tags{
+  display:flex; flex-wrap:wrap; gap:.4rem;
+  margin-bottom:1.4rem;
+}
+.modal-tags .tag{
+  font-family:var(--mono); font-size:.7rem;
+  padding:.3rem .6rem; border:1px solid var(--line-2); border-radius:5px;
+  color:var(--text-dim);
+}
+.modal-meta{
+  display:flex; gap:2rem; padding-top:1.2rem;
+  border-top:1px solid var(--line);
+}
+.modal-meta .meta-item{
+  font-size:.85rem;
+}
+.modal-meta .meta-item .lbl{
+  display:block; font-family:var(--mono); font-size:.62rem;
+  letter-spacing:.12em; text-transform:uppercase; color:var(--text-mute);
+  margin-bottom:.2rem;
+}
+.modal-meta .meta-item .val{ color:var(--text); }
+.modal-cta{
+  display:inline-flex; align-items:center; gap:.5rem;
+  margin-top:1.4rem; padding:.7rem 1.3rem;
+  border:1px solid var(--amber); border-radius:8px;
+  background:var(--amber-soft); color:var(--amber);
+  font-family:var(--mono); font-size:.74rem; letter-spacing:.14em;
+  text-transform:uppercase; text-decoration:none; cursor:none;
+  transition:background .3s var(--ease);
+}
+.modal-cta:hover{ background:rgba(240,168,104,0.2); }
+
+/* ---------- testimonials ---------- */
+.testimonials-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));
+  gap:1.4rem;
+  margin-top:1rem;
+}
+.testimonial{
+  position:relative;
+  padding:2rem 1.8rem 1.6rem;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  background:linear-gradient(180deg, var(--panel) 0%, var(--bg-2) 100%);
+  transition:transform .4s var(--ease), border-color .4s var(--ease);
+  overflow:hidden;
+}
+.testimonial:hover{
+  transform:translateY(-4px);
+  border-color:var(--line-amber);
+}
+.testimonial::before{
+  content:"\201C";
+  position:absolute;
+  top:-0.5rem; left:1rem;
+  font-family:var(--serif);
+  font-size:4rem;
+  line-height:1;
+  color:var(--amber);
+  opacity:0.15;
+  pointer-events:none;
+}
+.testimonial-quote{
+  font-size:.95rem;
+  line-height:1.7;
+  color:var(--text-dim);
+  margin:0 0 1.4rem;
+  position:relative;
+  z-index:1;
+}
+.testimonial-author{
+  display:flex; align-items:center; gap:.9rem;
+  padding-top:1rem;
+  border-top:1px solid var(--line);
+}
+.testimonial-avatar{
+  width:42px; height:42px;
+  border-radius:50%;
+  display:grid; place-items:center;
+  font-family:var(--serif);
+  font-size:1.1rem;
+  font-weight:600;
+  color:var(--bg);
+  flex-shrink:0;
+}
+.testimonial-meta{
+  display:flex; flex-direction:column; gap:.1rem;
+}
+.testimonial-name{
+  font-size:.88rem;
+  color:var(--text);
+  font-weight:500;
+}
+.testimonial-role{
+  font-family:var(--mono);
+  font-size:.68rem;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--text-mute);
+}
+</style>
+</head>
+<body>
+
+<!-- film grain -->
+<div class="grain" aria-hidden="true"></div>
+
+<!-- scroll progress bar -->
+<div class="scroll-progress" id="scrollProgress" aria-hidden="true"></div>
+
+<!-- hero background canvas -->
+<canvas id="bg-canvas" aria-hidden="true"></canvas>
+
+<!-- custom cursor -->
+<div id="c-dot" aria-hidden="true"></div>
+<div id="c-cross" aria-hidden="true"></div>
+
+<!-- command palette -->
+<div class="cmd-overlay" id="cmdOverlay" role="dialog" aria-label="Command palette" aria-modal="true">
+  <div class="cmd-box">
+    <input class="cmd-input" id="cmdInput" type="text" placeholder="Jump to a section or project…" autocomplete="off" />
+    <div class="cmd-results" id="cmdResults"></div>
+  </div>
+</div>
+
+<!-- project detail modal -->
+<div class="modal-overlay" id="modalOverlay" role="dialog" aria-label="Project details" aria-modal="true">
+  <div class="modal-box">
+    <button class="modal-close" id="modalClose" aria-label="Close" data-cursor="hover">&times;</button>
+    <div class="modal-thumb" id="modalThumb"></div>
+    <div class="modal-body">
+      <span class="modal-badge" id="modalBadge"></span>
+      <h3 class="modal-title" id="modalTitle"></h3>
+      <div class="modal-year" id="modalYear"></div>
+      <p class="modal-desc" id="modalDesc"></p>
+      <div class="modal-section-label">Tech stack</div>
+      <div class="modal-tags" id="modalTags"></div>
+      <div class="modal-meta">
+        <div class="meta-item"><span class="lbl">Role</span><span class="val" id="modalRole"></span></div>
+        <div class="meta-item"><span class="lbl">Client</span><span class="val" id="modalClient"></span></div>
+        <div class="meta-item"><span class="lbl">Status</span><span class="val" id="modalStatus"></span></div>
+      </div>
+      <a class="modal-cta" href="#contact" data-cursor="hover">Discuss this project →</a>
+    </div>
+  </div>
+</div>
+
+<!-- ============ HEADER ============ -->
+<header class="site" id="siteHeader">
+  <nav class="nav" aria-label="Primary">
+    <a href="#top" class="brand" data-cursor="hover" aria-label="Ari Vega — home">
+      <span class="mono-mark" aria-hidden="true">A</span>
+      <span>ARI&nbsp;VEGA</span>
+    </a>
+    <button class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="navLinks">Menu</button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#work" data-cursor="hover">Work</a></li>
+      <li><a href="#about" data-cursor="hover">About</a></li>
+      <li><a href="#skills" data-cursor="hover">Skills</a></li>
+      <li><a href="#testimonials" data-cursor="hover">Praise</a></li>
+      <li><a href="#contact" data-cursor="hover">Contact</a></li>
+      <li>
+        <span class="status-pill" title="Currently accepting select projects">
+          <span class="dot" aria-hidden="true"></span>
+          <span>Available · 2025</span>
+        </span>
+      </li>
+      <li>
+        <button class="cmd-hint" id="cmdHint" data-cursor="hover" aria-label="Open command palette" title="Quick navigation (press /)">
+          <span>Quick nav</span>
+          <kbd>/</kbd>
+        </button>
+      </li>
+    </ul>
+  </nav>
+</header>
+
+<main id="top">
+
+  <!-- ============ HERO ============ -->
+  <section class="hero" aria-label="Introduction">
+    <div class="wrap">
+      <span class="eyebrow reveal in">Creative Developer — Lisbon / Remote</span>
+      <h1 class="hero-name">
+        <span class="word w-fill"><span>ARI</span></span>
+        <span class="word w-outline"><span>VEGA</span></span>
+      </h1>
+      <p class="hero-role">Creative Developer<span class="sep">/</span>Interaction Engineer</p>
+      <p class="hero-tagline">
+        I craft cinematic, motion-driven web experiences where engineering precision
+        meets art direction — building interfaces that feel less like pages and more
+        like places.
+      </p>
+      <div class="hero-meta">
+        <span class="item">Based in <b>Lisbon, PT</b></span>
+        <span class="item">Focus <b>WebGL · Motion · Systems</b></span>
+        <span class="item">Available <b>Q1 2025</b></span>
+      </div>
+    </div>
+    <div class="scroll-hint" aria-hidden="true">
+      <span class="mouse"></span>
+      <span>Scroll to explore</span>
+    </div>
+  </section>
+
+  <!-- ============ MARQUEE ============ -->
+  <div class="marquee" aria-hidden="true">
+    <div class="marquee-track" id="marqueeTrack">
+      <span class="marquee-item">WebGL <span class="star">✦</span></span>
+      <span class="marquee-item dim">Three.js <span class="star">✦</span></span>
+      <span class="marquee-item">GLSL Shaders <span class="star">✦</span></span>
+      <span class="marquee-item dim">Motion Design <span class="star">✦</span></span>
+      <span class="marquee-item">Interaction Engineering <span class="star">✦</span></span>
+      <span class="marquee-item dim">Generative Systems <span class="star">✦</span></span>
+      <span class="marquee-item">Creative Coding <span class="star">✦</span></span>
+      <span class="marquee-item dim">Real-time Graphics <span class="star">✦</span></span>
+      <!-- duplicate for seamless loop -->
+      <span class="marquee-item">WebGL <span class="star">✦</span></span>
+      <span class="marquee-item dim">Three.js <span class="star">✦</span></span>
+      <span class="marquee-item">GLSL Shaders <span class="star">✦</span></span>
+      <span class="marquee-item dim">Motion Design <span class="star">✦</span></span>
+      <span class="marquee-item">Interaction Engineering <span class="star">✦</span></span>
+      <span class="marquee-item dim">Generative Systems <span class="star">✦</span></span>
+      <span class="marquee-item">Creative Coding <span class="star">✦</span></span>
+      <span class="marquee-item dim">Real-time Graphics <span class="star">✦</span></span>
+    </div>
+  </div>
+
+  <!-- ============ ABOUT ============ -->
+  <section class="block" id="about" aria-label="About">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div>
+          <span class="eyebrow">01 — About</span>
+          <h2 class="section-title">A developer who <em>designs motion</em> into the architecture.</h2>
+        </div>
+        <span class="section-index">/ 01</span>
+      </div>
+      <div class="about-grid">
+        <div class="about-copy reveal stagger">
+          <p>
+            I'm <strong>Ari Vega</strong> — a creative developer with a soft spot for the
+            space between <span class="ac">interaction</span> and <span class="ac">art direction</span>.
+            For the last eight years I've been building the kind of websites that make people
+            lean in: real-time graphics, scroll-driven narratives, and the small details
+            that turn a product into an experience.
+          </p>
+          <p>
+            My work lives at the intersection of engineering and craft. I write shaders
+            in the morning, refine easing curves in the afternoon, and care deeply about
+            accessibility, performance budgets, and the <strong>texture</strong> of a
+            well-built interface — the way a button responds, the rhythm of a reveal,
+            the weight of a transition.
+          </p>
+          <p>
+            Currently independent, working with studios and product teams who want their
+            web presence to feel alive. Previously at a few agencies you may have heard of,
+            shipping award-adjacent work for brands in music, fashion, and technology.
+          </p>
+        </div>
+        <div class="stats reveal stagger" aria-label="Career stats">
+          <div class="stat">
+            <div class="num">08<span>+</span></div>
+            <div class="lbl">Years crafting<br/>for the web</div>
+          </div>
+          <div class="stat">
+            <div class="num">64<span>+</span></div>
+            <div class="lbl">Projects shipped<br/>worldwide</div>
+          </div>
+          <div class="stat">
+            <div class="num">12</div>
+            <div class="lbl">Awards &amp;<br/>honorable mentions</div>
+          </div>
+          <div class="stat">
+            <div class="num">3.2<span>M</span></div>
+            <div class="lbl">Users reached<br/>last year</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ WORK ============ -->
+  <section class="block" id="work" aria-label="Selected work">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div>
+          <span class="eyebrow">02 — Selected Work</span>
+          <h2 class="section-title">Recent <em>experiments &amp; shipments</em>.</h2>
+        </div>
+        <span class="section-index">/ 02</span>
+      </div>
+
+      <div class="filter-row reveal">
+        <button class="filter-btn active" data-filter="all" data-cursor="hover">All</button>
+        <button class="filter-btn" data-filter="webgl" data-cursor="hover">WebGL</button>
+        <button class="filter-btn" data-filter="generative" data-cursor="hover">Generative</button>
+        <button class="filter-btn" data-filter="audio" data-cursor="hover">Audio</button>
+        <button class="filter-btn" data-filter="scroll" data-cursor="hover">Scroll</button>
+        <button class="filter-btn" data-filter="realtime" data-cursor="hover">Realtime</button>
+        <button class="filter-btn" data-filter="voice" data-cursor="hover">Voice</button>
+      </div>
+
+      <div class="work-grid reveal stagger">
+
+        <!-- 1 Lumen -->
+        <a class="card" href="#contact" data-cursor="hover" aria-label="Lumen project" data-cat="webgl" data-title="Lumen">
+          <div class="thumb">
+            <div class="grad g-lumen"></div>
+            <svg viewBox="0 0 400 225" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+              <g fill="#f0a868">
+                <circle cx="60" cy="60" r="1.6" opacity=".9"/>
+                <circle cx="120" cy="40" r="1.2" opacity=".6"/>
+                <circle cx="200" cy="80" r="2" opacity=".8"/>
+                <circle cx="280" cy="50" r="1.4" opacity=".7"/>
+                <circle cx="340" cy="90" r="1.8" opacity=".5"/>
+                <circle cx="90" cy="130" r="1.2" opacity=".6"/>
+                <circle cx="170" cy="150" r="2.2" opacity=".9"/>
+                <circle cx="250" cy="140" r="1.5" opacity=".7"/>
+                <circle cx="320" cy="160" r="1.3" opacity=".5"/>
+                <circle cx="40" cy="180" r="1.7" opacity=".6"/>
+                <circle cx="130" cy="195" r="1.1" opacity=".4"/>
+                <circle cx="300" cy="200" r="1.9" opacity=".8"/>
+              </g>
+              <g stroke="#f0a868" stroke-width=".5" opacity=".25" fill="none">
+                <line x1="60" y1="60" x2="170" y2="150"/>
+                <line x1="170" y1="150" x2="280" y2="50"/>
+                <line x1="200" y1="80" x2="300" y2="200"/>
+                <line x1="90" y1="130" x2="250" y2="140"/>
+              </g>
+            </svg>
+            <span class="badge">WebGL</span>
+          </div>
+          <div class="card-body">
+            <h3 class="card-title">Lumen <span class="yr">'24</span></h3>
+            <p class="card-desc">A real-time particle field that responds to ambient audio, rendered with instanced GPU sprites.</p>
+            <div class="card-tags">
+              <span class="tag">Three.js</span><span class="tag">GLSL</span><span class="tag">WebAudio</span>
+            </div>
+          </div>
+          <span class="accent-line" aria-hidden="true"></span>
+        </a>
+
+        <!-- 2 Tessera -->
+        <a class="card" href="#contact" data-cursor="hover" aria-label="Tessera project" data-cat="generative" data-title="Tessera">
+          <div class="thumb">
+            <div class="grad g-tessera"></div>
+            <svg viewBox="0 0 200 225" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+              <defs>
+                <pattern id="grid" width="22" height="22" patternUnits="userSpaceOnUse">
+                  <path d="M22 0H0V22" fill="none" stroke="#f0a868" stroke-width=".5" opacity=".35"/>
+                </pattern>
+              </defs>
+              <rect width="200" height="225" fill="url(#grid)"/>
+              <g fill="#f0a868" opacity=".85" font-family="serif" font-style="italic">
+                <text x="20" y="80" font-size="34">Aa</text>
+                <text x="100" y="150" font-size="26">Æ</text>
+              </g>
+            </svg>
+            <span class="badge">Generative</span>
+          </div>
+          <div class="card-body">
+            <h3 class="card-title">Tessera <span class="yr">'24</span></h3>
+            <p class="card-desc">A generative typography engine producing variable letterforms from parametric rules.</p>
+            <div class="card-tags">
+              <span class="tag">Canvas</span><span class="tag">Variable Fonts</span>
+            </div>
+          </div>
+          <span class="accent-line" aria-hidden="true"></span>
+        </a>
+
+        <!-- 3 Halcyon -->
+        <a class="card" href="#contact" data-cursor="hover" aria-label="Halcyon project" data-cat="audio" data-title="Halcyon">
+          <div class="thumb">
+            <div class="grad g-halcyon"></div>
+            <svg viewBox="0 0 400 225" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+              <g fill="#5fb8a8">
+                <rect x="20"  y="140" width="10" height="40" rx="2"/>
+                <rect x="40"  y="110" width="10" height="70" rx="2"/>
+                <rect x="60"  y="80"  width="10" height="100" rx="2"/>
+                <rect x="80"  y="120" width="10" height="60" rx="2"/>
+                <rect x="100" y="60"  width="10" height="120" rx="2"/>
+                <rect x="120" y="95"  width="10" height="85" rx="2"/>
+                <rect x="140" y="130" width="10" height="50" rx="2"/>
+                <rect x="160" y="70"  width="10" height="110" rx="2"/>
+                <rect x="180" y="105" width="10" height="75" rx="2"/>
+                <rect x="200" y="50"  width="10" height="130" rx="2" opacity="1"/>
+                <rect x="220" y="90"  width="10" height="90" rx="2"/>
+                <rect x="240" y="125" width="10" height="55" rx="2"/>
+                <rect x="260" y="75"  width="10" height="105" rx="2"/>
+                <rect x="280" y="115" width="10" height="65" rx="2"/>
+                <rect x="300" y="85"  width="10" height="95" rx="2"/>
+                <rect x="320" y="135" width="10" height="45" rx="2"/>
+                <rect x="340" y="100" width="10" height="80" rx="2"/>
+                <rect x="360" y="125" width="10" height="55" rx="2"/>
+              </g>
+            </svg>
+            <span class="badge">Audio</span>
+          </div>
+          <div class="card-body">
+            <h3 class="card-title">Halcyon <span class="yr">'23</span></h3>
+            <p class="card-desc">An audio-reactive 3D visualizer commissioned for a touring musician's live visuals.</p>
+            <div class="card-tags">
+              <span class="tag">Three.js</span><span class="tag">Shaders</span><span class="tag">FFT</span>
+            </div>
+          </div>
+          <span class="accent-line" aria-hidden="true"></span>
+        </a>
+
+        <!-- 4 Aperture -->
+        <a class="card" href="#contact" data-cursor="hover" aria-label="Aperture project" data-cat="scroll" data-title="Aperture">
+          <div class="thumb">
+            <div class="grad g-aperture"></div>
+            <svg viewBox="0 0 400 225" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+              <g fill="none" stroke="#f0a868">
+                <circle cx="200" cy="112" r="20" stroke-width="1" opacity=".9"/>
+                <circle cx="200" cy="112" r="40" stroke-width=".8" opacity=".7"/>
+                <circle cx="200" cy="112" r="62" stroke-width=".7" opacity=".55"/>
+                <circle cx="200" cy="112" r="86" stroke-width=".6" opacity=".4"/>
+                <circle cx="200" cy="112" r="112" stroke-width=".5" opacity=".28"/>
+                <circle cx="200" cy="112" r="140" stroke-width=".4" opacity=".18"/>
+              </g>
+            </svg>
+            <span class="badge">Scroll</span>
+          </div>
+          <div class="card-body">
+            <h3 class="card-title">Aperture <span class="yr">'23</span></h3>
+            <p class="card-desc">A scroll-driven cinematic landing for a camera brand — frame-by-frame storytelling on the GPU.</p>
+            <div class="card-tags">
+              <span class="tag">GSAP</span><span class="tag">Lenis</span><span class="tag">Pixi</span>
+            </div>
+          </div>
+          <span class="accent-line" aria-hidden="true"></span>
+        </a>
+
+        <!-- 5 Nimbus -->
+        <a class="card" href="#contact" data-cursor="hover" aria-label="Nimbus project" data-cat="realtime" data-title="Nimbus">
+          <div class="thumb">
+            <div class="grad g-nimbus"></div>
+            <svg viewBox="0 0 200 225" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+              <g stroke="#5fb8a8" stroke-width=".7" opacity=".55" fill="none">
+                <line x1="40" y1="50" x2="100" y2="90"/>
+                <line x1="100" y1="90" x2="160" y2="60"/>
+                <line x1="40" y1="50" x2="80" y2="150"/>
+                <line x1="100" y1="90" x2="80" y2="150"/>
+                <line x1="160" y1="60" x2="140" y2="170"/>
+                <line x1="80" y1="150" x2="140" y2="170"/>
+              </g>
+              <g fill="#5fb8a8">
+                <circle cx="40" cy="50" r="3"/>
+                <circle cx="100" cy="90" r="3.5"/>
+                <circle cx="160" cy="60" r="3"/>
+                <circle cx="80" cy="150" r="3"/>
+                <circle cx="140" cy="170" r="3"/>
+              </g>
+            </svg>
+            <span class="badge">Realtime</span>
+          </div>
+          <div class="card-body">
+            <h3 class="card-title">Nimbus <span class="yr">'22</span></h3>
+            <p class="card-desc">A collaborative whiteboard with CRDT sync and multiplayer presence cursors.</p>
+            <div class="card-tags">
+              <span class="tag">Yjs</span><span class="tag">WebSocket</span><span class="tag">Canvas</span>
+            </div>
+          </div>
+          <span class="accent-line" aria-hidden="true"></span>
+        </a>
+
+        <!-- 6 Echo -->
+        <a class="card" href="#contact" data-cursor="hover" aria-label="Echo project" data-cat="voice" data-title="Echo">
+          <div class="thumb">
+            <div class="grad g-echo"></div>
+            <svg viewBox="0 0 400 225" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+              <g fill="none" stroke="#f0a868" stroke-width="1.2" opacity=".8">
+                <path d="M0 112 Q 25 60, 50 112 T 100 112 T 150 112 T 200 112 T 250 112 T 300 112 T 350 112 T 400 112"/>
+              </g>
+              <g fill="none" stroke="#5fb8a8" stroke-width=".8" opacity=".55">
+                <path d="M0 130 Q 30 80, 60 130 T 120 130 T 180 130 T 240 130 T 300 130 T 360 130 T 420 130"/>
+                <path d="M0 95 Q 35 140, 70 95 T 140 95 T 210 95 T 280 95 T 350 95 T 420 95"/>
+              </g>
+            </svg>
+            <span class="badge">Voice</span>
+          </div>
+          <div class="card-body">
+            <h3 class="card-title">Echo <span class="yr">'22</span></h3>
+            <p class="card-desc">A voice-first step sequencer that turns spoken phrases into musical patterns.</p>
+            <div class="card-tags">
+              <span class="tag">Web Speech</span><span class="tag">Tone.js</span>
+            </div>
+          </div>
+          <span class="accent-line" aria-hidden="true"></span>
+        </a>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SKILLS ============ -->
+  <section class="block" id="skills" aria-label="Skills and capabilities">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div>
+          <span class="eyebrow">03 — Capabilities</span>
+          <h2 class="section-title">Tools, <em>sharpened</em> over time.</h2>
+        </div>
+        <span class="section-index">/ 03</span>
+      </div>
+
+      <div class="skills-grid reveal stagger">
+
+        <div class="skill-cat">
+          <div class="cat-head">
+            <span class="cat-name">Frontend</span>
+            <span class="cat-num">a</span>
+          </div>
+          <div class="skill-row"><span class="name">TypeScript</span><span class="bar"><i data-w="95"></i></span><span class="pct">95</span></div>
+          <div class="skill-row"><span class="name">React / Next</span><span class="bar"><i data-w="93"></i></span><span class="pct">93</span></div>
+          <div class="skill-row"><span class="name">CSS / Tailwind</span><span class="bar"><i data-w="96"></i></span><span class="pct">96</span></div>
+          <div class="skill-row"><span class="name">WebGL / GLSL</span><span class="bar"><i data-w="88"></i></span><span class="pct">88</span></div>
+        </div>
+
+        <div class="skill-cat">
+          <div class="cat-head">
+            <span class="cat-name">3D &amp; Motion</span>
+            <span class="cat-num">b</span>
+          </div>
+          <div class="skill-row"><span class="name">Three.js</span><span class="bar"><i data-w="92"></i></span><span class="pct">92</span></div>
+          <div class="skill-row"><span class="name">GSAP</span><span class="bar"><i data-w="90"></i></span><span class="pct">90</span></div>
+          <div class="skill-row"><span class="name">Framer Motion</span><span class="bar"><i data-w="85"></i></span><span class="pct">85</span></div>
+          <div class="skill-row"><span class="name">Blender / GLTF</span><span class="bar"><i data-w="78"></i></span><span class="pct">78</span></div>
+        </div>
+
+        <div class="skill-cat">
+          <div class="cat-head">
+            <span class="cat-name">Backend</span>
+            <span class="cat-num">c</span>
+          </div>
+          <div class="skill-row"><span class="name">Node.js</span><span class="bar"><i data-w="88"></i></span><span class="pct">88</span></div>
+          <div class="skill-row"><span class="name">Postgres / Prisma</span><span class="bar"><i data-w="84"></i></span><span class="pct">84</span></div>
+          <div class="skill-row"><span class="name">Redis / Cache</span><span class="bar"><i data-w="76"></i></span><span class="pct">76</span></div>
+          <div class="skill-row"><span class="name">Edge / Serverless</span><span class="bar"><i data-w="82"></i></span><span class="pct">82</span></div>
+        </div>
+
+        <div class="skill-cat">
+          <div class="cat-head">
+            <span class="cat-name">Tools &amp; Craft</span>
+            <span class="cat-num">d</span>
+          </div>
+          <div class="skill-row"><span class="name">Figma</span><span class="bar"><i data-w="89"></i></span><span class="pct">89</span></div>
+          <div class="skill-row"><span class="name">Git / CI</span><span class="bar"><i data-w="91"></i></span><span class="pct">91</span></div>
+          <div class="skill-row"><span class="name">Vite / Turbopack</span><span class="bar"><i data-w="87"></i></span><span class="pct">87</span></div>
+          <div class="skill-row"><span class="name">Performance</span><span class="bar"><i data-w="90"></i></span><span class="pct">90</span></div>
+        </div>
+
+      </div>
+
+      <div class="pills-row reveal" aria-label="Also working with">
+        <span class="pill">Rust (learning)</span>
+        <span class="pill">WebGPU</span>
+        <span class="pill">Tone.js</span>
+        <span class="pill">Lenis</span>
+        <span class="pill">Storybook</span>
+        <span class="pill">Playwright</span>
+        <span class="pill">Linear</span>
+        <span class="pill">Vercel</span>
+        <span class="pill">Cloudflare</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TESTIMONIALS ============ -->
+  <section class="block" id="testimonials" aria-label="Testimonials">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div>
+          <span class="eyebrow">04 — Kind Words</span>
+          <h2 class="section-title">What <em>collaborators</em> say.</h2>
+        </div>
+        <span class="section-index">/ 04</span>
+      </div>
+
+      <div class="testimonials-grid reveal stagger">
+
+        <div class="testimonial">
+          <p class="testimonial-quote">Ari has a rare ability to translate vague creative ambition into shipping code. The kind of developer who makes the whole team better — not just the product, but the process.</p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar" style="background:linear-gradient(135deg, #f0a868, #e8a05c);">M</div>
+            <div class="testimonial-meta">
+              <span class="testimonial-name">Mara Lindqvist</span>
+              <span class="testimonial-role">Creative Director · Studio Hjul</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="testimonial">
+          <p class="testimonial-quote">We hired Ari for a three-week sprint and ended up extending to six months. The motion work alone elevated our launch from "good" to "how did they do that?"</p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar" style="background:linear-gradient(135deg, #5fb8a8, #4a9d8e);">D</div>
+            <div class="testimonial-meta">
+              <span class="testimonial-name">Devon Park</span>
+              <span class="testimonial-role">Head of Product · Nimbus (acquired)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="testimonial">
+          <p class="testimonial-quote">The shader work Ari delivered for our live show was flawless — 40 venues, zero crashes, and visuals that made the crowd gasp every night. A true craftsperson.</p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar" style="background:linear-gradient(135deg, #c87a52, #a8623e);">R</div>
+            <div class="testimonial-meta">
+              <span class="testimonial-name">Rui Costa</span>
+              <span class="testimonial-role">Touring Musician · Halcyon</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CONTACT ============ -->
+  <section class="block" id="contact" aria-label="Contact">
+    <div class="wrap">
+      <div class="contact-cta">
+        <div class="cta-head reveal">
+          <span class="eyebrow">05 — Contact</span>
+          <h2>Let's build something <em>worth remembering.</em></h2>
+        </div>
+
+        <div class="magnetic-wrap reveal" id="magneticWrap">
+          <a class="magnetic-btn" href="mailto:hello@arivega.studio" data-cursor="hover" id="magneticBtn">
+            <span class="fill" aria-hidden="true"></span>
+            <span>Start a project</span>
+            <span class="arrow" aria-hidden="true">→</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="contact-grid">
+        <div class="contact-info reveal stagger">
+          <div class="info-block">
+            <div class="lbl">Email</div>
+            <a href="mailto:hello@arivega.studio" data-cursor="hover">hello@arivega.studio</a>
+          </div>
+          <div class="info-block">
+            <div class="lbl">Based in</div>
+            <span style="color:var(--text);font-size:1.05rem;">Lisbon, Portugal · working globally</span>
+          </div>
+          <div class="info-block">
+            <div class="lbl">Elsewhere</div>
+            <div class="socials">
+              <a href="#" data-cursor="hover">GitHub</a>
+              <a href="#" data-cursor="hover">LinkedIn</a>
+              <a href="#" data-cursor="hover">Dribbble</a>
+              <a href="#" data-cursor="hover">X / Twitter</a>
+              <a href="#" data-cursor="hover">Read.cv</a>
+            </div>
+          </div>
+        </div>
+
+        <form class="form reveal" id="contactForm" novalidate>
+          <div class="field">
+            <label for="cf-name">Name</label>
+            <input id="cf-name" name="name" type="text" placeholder="Your name" autocomplete="name" required />
+          </div>
+          <div class="field">
+            <label for="cf-email">Email</label>
+            <input id="cf-email" name="email" type="email" placeholder="you@studio.com" autocomplete="email" required />
+          </div>
+          <div class="field">
+            <label for="cf-msg">Message</label>
+            <textarea id="cf-msg" name="message" placeholder="Tell me about the project, timeline, and ambition." required></textarea>
+          </div>
+          <button type="submit" class="submit" data-cursor="hover">
+            <span>Send message</span>
+            <span aria-hidden="true">↗</span>
+          </button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer class="site">
+  <div class="wrap foot">
+    <span>© <span id="year">2025</span> Ari Vega — All rights reserved.</span>
+    <span class="made">Built with <span class="heart" aria-hidden="true">♥</span> &amp; care, in a single HTML file.</span>
+    <a href="#top" data-cursor="hover" id="backTop">Back to top ↑</a>
+  </div>
+</footer>
+
+<!-- toast -->
+<div class="toast" id="toast" role="status" aria-live="polite">
+  <span class="ic" aria-hidden="true">✓</span>
+  <span id="toastMsg">Message sent — I'll be in touch within 48h.</span>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var isTouch = window.matchMedia && window.matchMedia('(hover:none) and (pointer:coarse)').matches;
+
+  /* ---------- year ---------- */
+  var yEl = document.getElementById('year');
+  if(yEl) yEl.textContent = new Date().getFullYear();
+
+  /* ---------- header scrolled state ---------- */
+  var header = document.getElementById('siteHeader');
+  var onScroll = function(){
+    if(window.scrollY > 24){ header.classList.add('scrolled'); }
+    else { header.classList.remove('scrolled'); }
+  };
+  window.addEventListener('scroll', onScroll, { passive:true });
+  onScroll();
+
+  /* ---------- mobile nav toggle ---------- */
+  var toggle = document.getElementById('navToggle');
+  var links = document.getElementById('navLinks');
+  if(toggle){
+    toggle.addEventListener('click', function(){
+      var open = links.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    links.querySelectorAll('a').forEach(function(a){
+      a.addEventListener('click', function(){ links.classList.remove('open'); toggle.setAttribute('aria-expanded','false'); });
+    });
+  }
+
+  /* ---------- smooth scroll for anchors ---------- */
+  document.querySelectorAll('a[href^="#"]').forEach(function(a){
+    a.addEventListener('click', function(e){
+      var id = a.getAttribute('href');
+      if(!id || id === '#') return;
+      var el = document.querySelector(id);
+      if(!el) return;
+      e.preventDefault();
+      var top = el.getBoundingClientRect().top + window.scrollY - 10;
+      window.scrollTo({ top: top, behavior: prefersReduced ? 'auto' : 'smooth' });
+    });
+  });
+
+  /* ---------- IntersectionObserver: reveals + bars + nav active ---------- */
+  var revealObs = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if(en.isIntersecting){
+        en.target.classList.add('in');
+        // animate bars within
+        en.target.querySelectorAll('.bar > i[data-w]').forEach(function(i){
+          var w = i.getAttribute('data-w');
+          // delay slightly so transition triggers
+          requestAnimationFrame(function(){ i.style.width = w + '%'; });
+        });
+        revealObs.unobserve(en.target);
+      }
+    });
+  }, { threshold: 0.16, rootMargin: '0px 0px -8% 0px' });
+
+  document.querySelectorAll('.reveal').forEach(function(el){ revealObs.observe(el); });
+  // also observe skill rows for bar animation even if parent already revealed
+  var barObs = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if(en.isIntersecting){
+        var i = en.target.querySelector('i[data-w]');
+        if(i){ var w = i.getAttribute('data-w'); requestAnimationFrame(function(){ i.style.width = w + '%'; }); }
+        barObs.unobserve(en.target);
+      }
+    });
+  }, { threshold: 0.4 });
+  document.querySelectorAll('.skill-row').forEach(function(el){ barObs.observe(el); });
+
+  // nav active state
+  var sections = ['work','about','skills','testimonials','contact'].map(function(id){ return document.getElementById(id); }).filter(Boolean);
+  var navMap = {};
+  document.querySelectorAll('.nav-links a[href^="#"]').forEach(function(a){
+    navMap[a.getAttribute('href').slice(1)] = a;
+  });
+  var navObs = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if(en.isIntersecting){
+        var id = en.target.id;
+        Object.keys(navMap).forEach(function(k){ navMap[k].classList.remove('active'); });
+        if(navMap[id]) navMap[id].classList.add('active');
+      }
+    });
+  }, { threshold: 0.4, rootMargin: '-30% 0px -55% 0px' });
+  sections.forEach(function(s){ navObs.observe(s); });
+
+  /* ---------- custom cursor ---------- */
+  var dot = document.getElementById('c-dot');
+  var cross = document.getElementById('c-cross');
+  var body = document.body;
+
+  var mx = window.innerWidth/2, my = window.innerHeight/2;
+  var cx = mx, cy = my;       // cross (lagged)
+  var dx = mx, dy = my;       // dot (near-instant)
+  var visible = false;
+
+  if(!isTouch){
+    window.addEventListener('mousemove', function(e){
+      mx = e.clientX; my = e.clientY;
+      if(!visible){ visible = true; body.classList.remove('cursor-hidden'); }
+    }, { passive:true });
+
+    document.addEventListener('mouseleave', function(){
+      visible = false; body.classList.add('cursor-hidden');
+    });
+    document.addEventListener('mouseenter', function(){
+      visible = true; body.classList.remove('cursor-hidden');
+    });
+    window.addEventListener('blur', function(){ body.classList.add('cursor-hidden'); });
+    window.addEventListener('focus', function(){ body.classList.remove('cursor-hidden'); });
+
+    // hover state on interactive elements
+    document.querySelectorAll('a, button, input, textarea, [data-cursor="hover"]').forEach(function(el){
+      el.addEventListener('mouseenter', function(){ body.classList.add('cursor-hover'); });
+      el.addEventListener('mouseleave', function(){ body.classList.remove('cursor-hover'); });
+    });
+  } else {
+    body.classList.add('cursor-hidden');
+  }
+
+  /* ---------- hero canvas (drifting particles) ---------- */
+  var canvas = document.getElementById('bg-canvas');
+  var ctx = canvas ? canvas.getContext('2d') : null;
+  var particles = [];
+  var dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+  function resizeCanvas(){
+    if(!canvas) return;
+    canvas.width = Math.floor(window.innerWidth * dpr);
+    canvas.height = Math.floor(window.innerHeight * dpr);
+    canvas.style.width = window.innerWidth + 'px';
+    canvas.style.height = window.innerHeight + 'px';
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  function initParticles(){
+    particles = [];
+    if(prefersReduced) return;
+    var count = Math.min(46, Math.floor(window.innerWidth / 26));
+    for(var i=0;i<count;i++){
+      particles.push({
+        x: Math.random()*window.innerWidth,
+        y: Math.random()*window.innerHeight,
+        r: Math.random()*1.4 + 0.3,
+        vx: (Math.random()-0.5)*0.12,
+        vy: -Math.random()*0.22 - 0.04,
+        a: Math.random()*0.5 + 0.15,
+        c: Math.random() > 0.78 ? 't' : 'a'   // mostly amber, some teal
+      });
+    }
+  }
+  if(canvas){ resizeCanvas(); initParticles(); }
+  window.addEventListener('resize', function(){
+    resizeCanvas(); initParticles();
+  });
+
+  /* ---------- single rAF loop ---------- */
+  function loop(){
+    // cursor lerp
+    if(!isTouch){
+      dx += (mx - dx) * 0.5;
+      dy += (my - dy) * 0.5;
+      cx += (mx - cx) * 0.18;
+      cy += (my - cy) * 0.18;
+      dot.style.transform = 'translate3d(' + dx + 'px,' + dy + 'px,0) translate(-50%,-50%)';
+      cross.style.transform = 'translate3d(' + cx + 'px,' + cy + 'px,0) translate(-50%,-50%)';
+    }
+
+    // particles
+    if(ctx && !prefersReduced){
+      ctx.clearRect(0,0,window.innerWidth, window.innerHeight);
+      for(var i=0;i<particles.length;i++){
+        var p = particles[i];
+        p.x += p.vx; p.y += p.vy;
+        // wrap
+        if(p.y < -10){ p.y = window.innerHeight + 10; p.x = Math.random()*window.innerWidth; }
+        if(p.x < -10) p.x = window.innerWidth + 10;
+        if(p.x > window.innerWidth + 10) p.x = -10;
+        var col = p.c === 't' ? 'rgba(95,184,168,' : 'rgba(240,168,104,';
+        ctx.beginPath();
+        ctx.fillStyle = col + p.a + ')';
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+        ctx.fill();
+      }
+    }
+
+    rafId = requestAnimationFrame(loop);
+  }
+  var rafId = requestAnimationFrame(loop);
+
+  // pause when tab hidden
+  document.addEventListener('visibilitychange', function(){
+    if(document.hidden){
+      cancelAnimationFrame(rafId);
+    } else {
+      rafId = requestAnimationFrame(loop);
+    }
+  });
+
+  /* ---------- magnetic button ---------- */
+  var mWrap = document.getElementById('magneticWrap');
+  var mBtn = document.getElementById('magneticBtn');
+  if(mWrap && mBtn && !isTouch && !prefersReduced){
+    var strength = 0.35;
+    mWrap.addEventListener('mousemove', function(e){
+      var r = mWrap.getBoundingClientRect();
+      var relX = e.clientX - (r.left + r.width/2);
+      var relY = e.clientY - (r.top + r.height/2);
+      mBtn.style.transform = 'translate(' + (relX*strength) + 'px,' + (relY*strength) + 'px)';
+    });
+    mWrap.addEventListener('mouseleave', function(){
+      mBtn.style.transform = 'translate(0,0)';
+    });
+  }
+
+  /* ---------- contact form + toast ---------- */
+  var form = document.getElementById('contactForm');
+  var toast = document.getElementById('toast');
+  var toastMsg = document.getElementById('toastMsg');
+  var toastTimer = null;
+  function showToast(msg, ok){
+    if(!toast) return;
+    toastMsg.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toast.classList.remove('show'); }, 3600);
+  }
+  if(form){
+    form.addEventListener('submit', function(e){
+      e.preventDefault();
+      var name = form.querySelector('#cf-name').value.trim();
+      var email = form.querySelector('#cf-email').value.trim();
+      var msg = form.querySelector('#cf-msg').value.trim();
+      if(!name || !email || !msg){
+        showToast('Please fill in all fields before sending.', false);
+        return;
+      }
+      if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+        showToast('That email looks off — could you check it?', false);
+        return;
+      }
+      showToast("Message sent — I'll be in touch within 48h.", true);
+      form.reset();
+    });
+  }
+
+  /* ---------- back-to-top ---------- */
+  var backTop = document.getElementById('backTop');
+  if(backTop){
+    backTop.addEventListener('click', function(e){
+      e.preventDefault();
+      window.scrollTo({ top:0, behavior: prefersReduced ? 'auto' : 'smooth' });
+    });
+  }
+
+  /* ---------- scroll progress bar ---------- */
+  var progress = document.getElementById('scrollProgress');
+  function updateProgress(){
+    if(!progress) return;
+    var h = document.documentElement;
+    var scrollable = h.scrollHeight - h.clientHeight;
+    var pct = scrollable > 0 ? (h.scrollTop / scrollable) * 100 : 0;
+    progress.style.width = pct + '%';
+  }
+  window.addEventListener('scroll', updateProgress, { passive:true });
+  updateProgress();
+
+  /* ---------- project filter ---------- */
+  var filterBtns = document.querySelectorAll('.filter-btn');
+  var cards = document.querySelectorAll('.work-grid .card');
+  filterBtns.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      filterBtns.forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      var f = btn.getAttribute('data-filter');
+      cards.forEach(function(card){
+        var cat = card.getAttribute('data-cat');
+        if(f === 'all' || cat === f){
+          card.classList.remove('hide-filter');
+        } else {
+          card.classList.add('hide-filter');
+        }
+      });
+    });
+  });
+
+  /* ---------- command palette ---------- */
+  var cmdOverlay = document.getElementById('cmdOverlay');
+  var cmdInput = document.getElementById('cmdInput');
+  var cmdResults = document.getElementById('cmdResults');
+  var cmdHint = document.getElementById('cmdHint');
+  var cmdData = [
+    { label:'Home', cat:'section', target:'#top' },
+    { label:'About', cat:'section', target:'#about' },
+    { label:'Work', cat:'section', target:'#work' },
+    { label:'Skills', cat:'section', target:'#skills' },
+    { label:'Praise', cat:'section', target:'#testimonials' },
+    { label:'Contact', cat:'section', target:'#contact' }
+  ];
+  // add project cards
+  document.querySelectorAll('.work-grid .card').forEach(function(card){
+    var title = card.getAttribute('data-title');
+    var cat = card.getAttribute('data-cat');
+    if(title){
+      cmdData.push({ label:title, cat:cat||'project', target:'#work', card:card });
+    }
+  });
+  var cmdSelected = -1;
+  var cmdFiltered = [];
+
+  function openCmd(){
+    if(!cmdOverlay) return;
+    cmdOverlay.classList.add('open');
+    cmdInput.value = '';
+    cmdInput.focus();
+    renderCmd('');
+  }
+  function closeCmd(){
+    if(!cmdOverlay) return;
+    cmdOverlay.classList.remove('open');
+  }
+  function renderCmd(q){
+    if(!cmdResults) return;
+    q = (q||'').toLowerCase().trim();
+    cmdFiltered = q ? cmdData.filter(function(item){ return item.label.toLowerCase().indexOf(q) >= 0 || item.cat.toLowerCase().indexOf(q) >= 0; }) : cmdData.slice(0,8);
+    cmdSelected = cmdFiltered.length > 0 ? 0 : -1;
+    cmdResults.innerHTML = cmdFiltered.map(function(item, i){
+      return '<button class="cmd-item' + (i===0?' selected':'') + '" data-idx="'+i+'" data-cursor="hover">' +
+             '<span>'+item.label+'</span>' +
+             '<span class="cmd-cat">'+item.cat+'</span>' +
+             '</button>';
+    }).join('');
+    cmdResults.querySelectorAll('.cmd-item').forEach(function(el){
+      el.addEventListener('click', function(){
+        var idx = parseInt(el.getAttribute('data-idx'));
+        execCmd(idx);
+      });
+      el.addEventListener('mouseenter', function(){
+        cmdSelected = parseInt(el.getAttribute('data-idx'));
+        updateCmdSelected();
+      });
+    });
+  }
+  function updateCmdSelected(){
+    cmdResults.querySelectorAll('.cmd-item').forEach(function(el, i){
+      el.classList.toggle('selected', i === cmdSelected);
+    });
+  }
+  function execCmd(idx){
+    if(idx < 0 || idx >= cmdFiltered.length) return;
+    var item = cmdFiltered[idx];
+    closeCmd();
+    if(item.card){
+      // scroll to the card's offset within the work section
+      var offsetTop = item.card.getBoundingClientRect().top + window.scrollY - 80;
+      window.scrollTo({ top: offsetTop, behavior: prefersReduced ? 'auto' : 'smooth' });
+    } else if(item.target){
+      var el = document.querySelector(item.target);
+      if(el){
+        var top = el.getBoundingClientRect().top + window.scrollY - 10;
+        window.scrollTo({ top: top, behavior: prefersReduced ? 'auto' : 'smooth' });
+      }
+    }
+  }
+  if(cmdHint){ cmdHint.addEventListener('click', openCmd); }
+  if(cmdOverlay){
+    cmdOverlay.addEventListener('click', function(e){
+      if(e.target === cmdOverlay) closeCmd();
+    });
+  }
+  if(cmdInput){
+    cmdInput.addEventListener('input', function(){ renderCmd(cmdInput.value); });
+    cmdInput.addEventListener('keydown', function(e){
+      if(e.key === 'Escape'){ e.preventDefault(); closeCmd(); }
+      else if(e.key === 'ArrowDown'){ e.preventDefault(); cmdSelected = Math.min(cmdSelected+1, cmdFiltered.length-1); updateCmdSelected(); }
+      else if(e.key === 'ArrowUp'){ e.preventDefault(); cmdSelected = Math.max(cmdSelected-1, 0); updateCmdSelected(); }
+      else if(e.key === 'Enter'){ e.preventDefault(); execCmd(cmdSelected); }
+    });
+  }
+  // global keyboard shortcut: "/" or Cmd+K / Ctrl+K
+  document.addEventListener('keydown', function(e){
+    if((e.key === 'k' && (e.metaKey || e.ctrlKey)) || (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA')){
+      e.preventDefault();
+      if(cmdOverlay && cmdOverlay.classList.contains('open')){ closeCmd(); } else { openCmd(); }
+    } else if(e.key === 'Escape' && cmdOverlay && cmdOverlay.classList.contains('open')){
+      closeCmd();
+    }
+  });
+
+  /* ---------- project detail modal ---------- */
+  var projectData = {
+    'Lumen': {
+      role: 'Lead Developer',
+      client: 'Independent / R&D',
+      status: 'Shipped',
+      longDesc: 'Lumen is a real-time particle field that responds to ambient audio frequencies. Built with instanced GPU sprites and a custom GLSL shader, it renders 50,000+ particles at 60fps while reacting to a live WebAudio FFT analysis. The piece was exhibited as an interactive installation at a Lisbon digital arts festival.'
+    },
+    'Tessera': {
+      role: 'Creative Developer',
+      client: 'Type foundry (NDA)',
+      status: 'Shipped',
+      longDesc: 'Tessera is a generative typography engine that produces variable letterforms from a set of parametric rules. Users manipulate sliders for stroke contrast, terminal curvature, and x-height ratio, seeing the typeface mutate in real time. Exported as OpenType variable fonts via a server-side glyph compiler.'
+    },
+    'Halcyon': {
+      role: 'Visuals Engineer',
+      client: 'Touring musician',
+      status: 'On tour',
+      longDesc: 'Halcyon is an audio-reactive 3D visualizer commissioned for a touring musician\'s live visuals. It runs in TouchDesigner with a WebGL bridge for web previews, syncing shader uniforms to MIDI clock and live audio input. The show has toured 40+ venues across Europe.'
+    },
+    'Aperture': {
+      role: 'Lead Developer',
+      client: 'Camera brand',
+      status: 'Shipped',
+      longDesc: 'Aperture is a scroll-driven cinematic landing page for a camera brand. It uses GPU-rendered frame interpolation to tell a frame-by-frame product story as the user scrolls, with depth-based parallax and a rack-focus transition between scenes. Built on a custom scroll engine for buttery 120fps scrubbing.'
+    },
+    'Nimbus': {
+      role: 'Full-stack Engineer',
+      client: 'Startup (acquired)',
+      status: 'Acquired',
+      longDesc: 'Nimbus is a collaborative whiteboard with CRDT-based sync and multiplayer presence cursors. Built with Yjs for conflict-free merging, WebSocket presence, and a Canvas2D rendering layer optimized for thousands of sticky notes. Acquired by a productivity suite in 2023.'
+    },
+    'Echo': {
+      role: 'Creative Developer',
+      client: 'Independent',
+      status: 'Open source',
+      longDesc: 'Echo is a voice-first step sequencer that turns spoken phrases into musical patterns. It uses the Web Speech API for transcription, maps phonemes to drum hits and melodic notes, and renders a playable sequencer grid. Open-sourced on GitHub with an active community of contributors.'
+    }
+  };
+
+  var modalOverlay = document.getElementById('modalOverlay');
+  var modalClose = document.getElementById('modalClose');
+
+  function openModal(card){
+    if(!modalOverlay || !card) return;
+    var title = card.getAttribute('data-title') || '';
+    var cat = card.getAttribute('data-cat') || '';
+    var titleEl = card.querySelector('.card-title');
+    var yearSpan = titleEl ? titleEl.querySelector('.yr') : null;
+    var year = yearSpan ? yearSpan.textContent : '';
+    var desc = card.querySelector('.card-desc') ? card.querySelector('.card-desc').textContent : '';
+    var tags = card.querySelectorAll('.card-tags .tag');
+    var thumb = card.querySelector('.thumb');
+    var grad = thumb ? thumb.querySelector('.grad') : null;
+    var svg = thumb ? thumb.querySelector('svg') : null;
+    var badge = thumb ? thumb.querySelector('.badge') : null;
+
+    var data = projectData[title] || {};
+
+    document.getElementById('modalTitle').textContent = title;
+    document.getElementById('modalYear').textContent = year + (data.status ? ' · ' + data.status : '');
+    document.getElementById('modalDesc').textContent = data.longDesc || desc;
+    document.getElementById('modalBadge').textContent = badge ? badge.textContent : cat;
+
+    // tags
+    var tagsEl = document.getElementById('modalTags');
+    tagsEl.innerHTML = '';
+    tags.forEach(function(t){ var s=document.createElement('span'); s.className='tag'; s.textContent=t.textContent; tagsEl.appendChild(s); });
+
+    // meta
+    document.getElementById('modalRole').textContent = data.role || '—';
+    document.getElementById('modalClient').textContent = data.client || '—';
+    document.getElementById('modalStatus').textContent = data.status || '—';
+
+    // thumb: clone the gradient + svg
+    var thumbEl = document.getElementById('modalThumb');
+    thumbEl.innerHTML = '';
+    if(grad){ var g = grad.cloneNode(true); thumbEl.appendChild(g); }
+    if(svg){ var s = svg.cloneNode(true); s.style.position='absolute'; s.style.inset='0'; s.style.width='100%'; s.style.height='100%'; thumbEl.appendChild(s); }
+
+    modalOverlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeModal(){
+    if(!modalOverlay) return;
+    modalOverlay.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  // intercept card clicks to open modal instead of navigating to #contact
+  document.querySelectorAll('.work-grid .card').forEach(function(card){
+    card.addEventListener('click', function(e){
+      e.preventDefault();
+      openModal(card);
+    });
+  });
+  if(modalClose){ modalClose.addEventListener('click', closeModal); }
+  if(modalOverlay){
+    modalOverlay.addEventListener('click', function(e){
+      if(e.target === modalOverlay) closeModal();
+    });
+  }
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape' && modalOverlay && modalOverlay.classList.contains('open')){
+      closeModal();
+    }
+  });
+
+})();
+</script>
+</body>
+</html>
