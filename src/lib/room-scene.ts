@@ -110,46 +110,98 @@ function woodTexture(opts: { base: string; grain: string; dark: string; w?: numb
   const [c, ctx] = mkCanvas(w, h)
   ctx.fillStyle = base
   ctx.fillRect(0, 0, w, h)
-  // grain streaks
-  const lines = vertical ? 60 : 70
-  for (let i = 0; i < lines; i++) {
+
+  // Planking lines & subtle tone shifts between planks
+  const plankCount = 8
+  const plankSize = (vertical ? w : h) / plankCount
+  for (let p = 0; p < plankCount; p++) {
+    const pos = p * plankSize
+    // plank subtle color variation
+    ctx.fillStyle = Math.random() > 0.5 ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.04)'
+    if (vertical) ctx.fillRect(pos, 0, plankSize, h)
+    else ctx.fillRect(0, pos, w, plankSize)
+
+    // plank seam gap
+    ctx.fillStyle = 'rgba(10,5,2,0.6)'
+    if (vertical) ctx.fillRect(pos, 0, 2, h)
+    else ctx.fillRect(0, pos, w, 2)
+  }
+
+  // Layer 1: Broad organic rings / fibers
+  const primaryRings = 180
+  for (let i = 0; i < primaryRings; i++) {
     const pos = Math.random() * (vertical ? w : h)
-    const len = w * (0.5 + Math.random() * 0.6)
-    const thick = 0.5 + Math.random() * 2.2
-    ctx.strokeStyle = Math.random() > 0.6 ? dark : grain
-    ctx.globalAlpha = 0.15 + Math.random() * 0.35
+    const thick = 0.8 + Math.random() * 3.5
+    ctx.strokeStyle = Math.random() > 0.45 ? grain : dark
+    ctx.globalAlpha = 0.12 + Math.random() * 0.38
     ctx.lineWidth = thick
     ctx.beginPath()
+    const waveFreq = 0.008 + Math.random() * 0.015
+    const waveAmp = 4 + Math.random() * 12
     if (vertical) {
-      const x = pos
-      ctx.moveTo(x, 0)
-      for (let y = 0; y <= h; y += 12) {
-        ctx.lineTo(x + Math.sin(y * 0.02 + i) * 3, y)
+      ctx.moveTo(pos, 0)
+      for (let y = 0; y <= h; y += 8) {
+        ctx.lineTo(pos + Math.sin(y * waveFreq + i * 0.5) * waveAmp + Math.cos(y * 0.03) * 2, y)
       }
     } else {
-      const y = pos
-      ctx.moveTo(0, y)
-      for (let x = 0; x <= w; x += 12) {
-        ctx.lineTo(x, y + Math.sin(x * 0.02 + i) * 3)
+      ctx.moveTo(0, pos)
+      for (let x = 0; x <= w; x += 8) {
+        ctx.lineTo(x, pos + Math.sin(x * waveFreq + i * 0.5) * waveAmp + Math.cos(x * 0.03) * 2)
       }
     }
     ctx.stroke()
   }
-  ctx.globalAlpha = 1
-  // knots
-  for (let i = 0; i < 4; i++) {
+
+  // Layer 2: Ultra-fine wood pore capillaries
+  ctx.globalAlpha = 0.2
+  ctx.strokeStyle = dark
+  ctx.lineWidth = 0.5
+  for (let i = 0; i < 600; i++) {
+    const rx = Math.random() * w
+    const ry = Math.random() * h
+    const len = 10 + Math.random() * 40
+    ctx.beginPath()
+    if (vertical) {
+      ctx.moveTo(rx, ry)
+      ctx.lineTo(rx + (Math.random() - 0.5) * 2, ry + len)
+    } else {
+      ctx.moveTo(rx, ry)
+      ctx.lineTo(rx + len, ry + (Math.random() - 0.5) * 2)
+    }
+    ctx.stroke()
+  }
+
+  ctx.globalAlpha = 1.0
+  // Realistic knots with wood grain swirl
+  for (let i = 0; i < 6; i++) {
     const x = Math.random() * w
     const y = Math.random() * h
-    const r = 6 + Math.random() * 16
-    const g = ctx.createRadialGradient(x, y, 1, x, y, r)
+    const r = 10 + Math.random() * 24
+
+    // Knot center dark eye
+    const g = ctx.createRadialGradient(x, y, 2, x, y, r)
     g.addColorStop(0, dark)
+    g.addColorStop(0.4, grain)
+    g.addColorStop(0.8, 'rgba(0,0,0,0.2)')
     g.addColorStop(1, 'rgba(0,0,0,0)')
     ctx.fillStyle = g
     ctx.beginPath()
     ctx.arc(x, y, r, 0, Math.PI * 2)
     ctx.fill()
+
+    // Swirl rings around knot
+    for (let sr = r * 0.5; sr < r * 2.2; sr += 4) {
+      ctx.strokeStyle = Math.random() > 0.5 ? dark : grain
+      ctx.globalAlpha = 0.25
+      ctx.lineWidth = 1.2
+      ctx.beginPath()
+      ctx.ellipse(x, y, sr, sr * 0.7, Math.PI * 0.25, 0, Math.PI * 2)
+      ctx.stroke()
+    }
   }
-  noiseFill(ctx, w, h, 16)
+
+  ctx.globalAlpha = 1.0
+  noiseFill(ctx, w, h, 20)
   return c
 }
 
@@ -158,47 +210,121 @@ function plasterTexture(opts: { base: string; w?: number; h?: number }) {
   const [c, ctx] = mkCanvas(w, h)
   ctx.fillStyle = base
   ctx.fillRect(0, 0, w, h)
-  // faint vertical shade variation
-  for (let i = 0; i < 8; i++) {
-    const x = (i / 8) * w
-    const g = ctx.createLinearGradient(x, 0, x + w / 8, 0)
-    g.addColorStop(0, 'rgba(0,0,0,0.04)')
-    g.addColorStop(1, 'rgba(255,255,255,0.02)')
+
+  // Stippling and trowel micro-texture patches
+  for (let i = 0; i < 45; i++) {
+    const px = Math.random() * w
+    const py = Math.random() * h
+    const pr = 40 + Math.random() * 120
+    const g = ctx.createRadialGradient(px, py, 5, px, py, pr)
+    const isDark = Math.random() > 0.45
+    g.addColorStop(0, isDark ? 'rgba(0,0,0,0.035)' : 'rgba(255,255,255,0.03)')
+    g.addColorStop(1, 'rgba(0,0,0,0)')
     ctx.fillStyle = g
-    ctx.fillRect(x, 0, w / 8, h)
+    ctx.beginPath()
+    ctx.arc(px, py, pr, 0, Math.PI * 2)
+    ctx.fill()
   }
-  noiseFill(ctx, w, h, 22)
-  // a couple of faint seams
-  ctx.strokeStyle = 'rgba(0,0,0,0.06)'
-  ctx.lineWidth = 1
-  ctx.beginPath()
-  ctx.moveTo(w * 0.33, 0)
-  ctx.lineTo(w * 0.33, h)
-  ctx.moveTo(w * 0.72, 0)
-  ctx.lineTo(w * 0.72, h)
-  ctx.stroke()
+
+  // Trowel stroke directions
+  ctx.strokeStyle = 'rgba(0,0,0,0.025)'
+  ctx.lineWidth = 15
+  for (let i = 0; i < 20; i++) {
+    const sx = Math.random() * w
+    const sy = Math.random() * h
+    ctx.beginPath()
+    ctx.moveTo(sx, sy)
+    ctx.quadraticCurveTo(sx + 100, sy + (Math.random() - 0.5) * 80, sx + 200, sy + (Math.random() - 0.5) * 40)
+    ctx.stroke()
+  }
+
+  noiseFill(ctx, w, h, 26)
   return c
 }
 
 function metalTexture(opts: { base: string; w?: number; h?: number }) {
-  const { base, w = 512, h = 512 } = opts
+  const { base, w = 1024, h = 1024 } = opts
   const [c, ctx] = mkCanvas(w, h)
   ctx.fillStyle = base
   ctx.fillRect(0, 0, w, h)
-  // brushed metal fine scratches
-  for (let i = 0; i < 1400; i++) {
+
+  // Brushed directional micro-lines
+  for (let i = 0; i < 3500; i++) {
     const x = Math.random() * w
     const y = Math.random() * h
-    const len = 2 + Math.random() * 14
-    ctx.strokeStyle = `rgba(255,255,255,${Math.random() * 0.06})`
-    if (Math.random() > 0.5) ctx.strokeStyle = `rgba(0,0,0,${Math.random() * 0.08})`
-    ctx.lineWidth = 0.5
+    const len = 4 + Math.random() * 28
+    ctx.strokeStyle = Math.random() > 0.45 ? `rgba(255,255,255,${Math.random() * 0.08})` : `rgba(0,0,0,${Math.random() * 0.09})`
+    ctx.lineWidth = 0.6
     ctx.beginPath()
     ctx.moveTo(x, y)
-    ctx.lineTo(x + len, y)
+    ctx.lineTo(x + len, y + (Math.random() - 0.5) * 0.5)
     ctx.stroke()
   }
-  noiseFill(ctx, w, h, 10)
+
+  // Subtle anodized specular highlight variations
+  const g = ctx.createLinearGradient(0, 0, w, h)
+  g.addColorStop(0, 'rgba(255,255,255,0.02)')
+  g.addColorStop(0.5, 'rgba(0,0,0,0.03)')
+  g.addColorStop(1, 'rgba(255,255,255,0.02)')
+  ctx.fillStyle = g
+  ctx.fillRect(0, 0, w, h)
+
+  noiseFill(ctx, w, h, 12)
+  return c
+}
+
+function curtainFabricTexture(opts: { base: string; pattern: string; dark: string; w?: number; h?: number }): HTMLCanvasElement {
+  const { base, pattern, dark, w = 1024, h = 1024 } = opts
+  const [c, ctx] = mkCanvas(w, h)
+  ctx.fillStyle = base
+  ctx.fillRect(0, 0, w, h)
+
+  // High-density organic fabric weave threads
+  ctx.lineWidth = 1.0
+  const step = 4
+  for (let x = 0; x <= w; x += step) {
+    ctx.strokeStyle = (x / step) % 2 === 0 ? pattern : dark
+    ctx.globalAlpha = 0.15 + Math.random() * 0.15
+    ctx.beginPath()
+    ctx.moveTo(x, 0)
+    ctx.lineTo(x, h)
+    ctx.stroke()
+  }
+  for (let y = 0; y <= h; y += step) {
+    ctx.strokeStyle = (y / step) % 2 === 0 ? pattern : dark
+    ctx.globalAlpha = 0.15 + Math.random() * 0.15
+    ctx.beginPath()
+    ctx.moveTo(0, y)
+    ctx.lineTo(w, y)
+    ctx.stroke()
+  }
+  ctx.globalAlpha = 1.0
+
+  // Soft organic fabric slub variations (horizontal thick threads)
+  for (let i = 0; i < 80; i++) {
+    const sy = Math.random() * h
+    const sx = Math.random() * (w * 0.7)
+    const slen = 40 + Math.random() * 120
+    ctx.strokeStyle = Math.random() > 0.5 ? pattern : dark
+    ctx.globalAlpha = 0.35
+    ctx.lineWidth = 2.0
+    ctx.beginPath()
+    ctx.moveTo(sx, sy)
+    ctx.lineTo(sx + slen, sy)
+    ctx.stroke()
+  }
+  ctx.globalAlpha = 1.0
+
+  // Vertical curtain fold depth shading
+  for (let x = 0; x < w; x += 128) {
+    const g = ctx.createLinearGradient(x, 0, x + 128, 0)
+    g.addColorStop(0, 'rgba(0,0,0,0.32)')
+    g.addColorStop(0.5, 'rgba(255,255,255,0.06)')
+    g.addColorStop(1, 'rgba(0,0,0,0.32)')
+    ctx.fillStyle = g
+    ctx.fillRect(x, 0, 128, h)
+  }
+  noiseFill(ctx, w, h, 24)
   return c
 }
 
@@ -211,7 +337,7 @@ function roughnessFromCanvas(src: HTMLCanvasElement, base: number, variance: num
   const d = img.data
   for (let i = 0; i < d.length; i += 4) {
     const lum = (d[i] + d[i + 1] + d[i + 2]) / 3 / 255
-    const v = clamp(base + lum * 0.3, 0, 1) * 255
+    const v = clamp(base + lum * 0.35 - (Math.random() * 0.05), 0, 1) * 255
     d[i] = d[i + 1] = d[i + 2] = v
   }
   ctx.putImageData(img, 0, 0)
@@ -310,53 +436,217 @@ function eveningSkyTexture(): HTMLCanvasElement {
   return c
 }
 
-function artTexture(): HTMLCanvasElement {
+function artTexture(artIdx = 0): HTMLCanvasElement {
   const w = 512
   const h = 640
   const [c, ctx] = mkCanvas(w, h)
-  const g = ctx.createLinearGradient(0, 0, 0, h)
-  g.addColorStop(0, '#241a2e')
-  g.addColorStop(0.5, '#5a3340')
-  g.addColorStop(1, '#c8784e')
-  ctx.fillStyle = g
-  ctx.fillRect(0, 0, w, h)
-  // abstract shapes
-  for (let i = 0; i < 6; i++) {
-    ctx.fillStyle = `rgba(${20 + Math.random() * 80},${10 + Math.random() * 40},${30 + Math.random() * 60},${0.5})`
+
+  if (artIdx === 0) {
+    // Cosmic Black Hole & Accretion Disk (Signature Portfolio Theme)
+    ctx.fillStyle = '#080010'
+    ctx.fillRect(0, 0, w, h)
+    ctx.fillStyle = '#ffffff'
+    for (let i = 0; i < 160; i++) {
+      const sx = Math.random() * w
+      const sy = Math.random() * h
+      const sr = Math.random() * 1.5
+      ctx.globalAlpha = 0.2 + Math.random() * 0.8
+      ctx.fillRect(sx, sy, sr, sr)
+    }
+    ctx.globalAlpha = 1.0
+
+    const cx = w / 2
+    const cy = h / 2
+
+    const gOut = ctx.createRadialGradient(cx, cy, 30, cx, cy, 230)
+    gOut.addColorStop(0, 'rgba(255, 107, 53, 0.95)')
+    gOut.addColorStop(0.35, 'rgba(168, 85, 247, 0.65)')
+    gOut.addColorStop(0.7, 'rgba(0, 240, 255, 0.3)')
+    gOut.addColorStop(1, 'rgba(8, 0, 16, 0)')
+    ctx.fillStyle = gOut
     ctx.beginPath()
-    ctx.ellipse(Math.random() * w, Math.random() * h, 40 + Math.random() * 120, 20 + Math.random() * 80, Math.random() * Math.PI, 0, Math.PI * 2)
+    ctx.arc(cx, cy, 230, 0, Math.PI * 2)
     ctx.fill()
+
+    for (let r = 170; r >= 55; r -= 12) {
+      ctx.beginPath()
+      ctx.strokeStyle = r > 120 ? 'rgba(255, 107, 53, 0.65)' : r > 85 ? 'rgba(255, 179, 0, 0.85)' : 'rgba(0, 240, 255, 0.95)'
+      ctx.lineWidth = 4 + Math.random() * 5
+      ctx.ellipse(cx, cy, r, r * 0.45, -0.22, 0, Math.PI * 2)
+      ctx.stroke()
+    }
+
+    ctx.fillStyle = '#030006'
+    ctx.beginPath()
+    ctx.arc(cx, cy, 48, 0, Math.PI * 2)
+    ctx.fill()
+
+    ctx.strokeStyle = '#ffffff'
+    ctx.lineWidth = 2.5
+    ctx.beginPath()
+    ctx.arc(cx, cy, 49, 0, Math.PI * 2)
+    ctx.stroke()
+
+    ctx.fillStyle = '#f0eaff'
+    ctx.font = 'bold 20px monospace'
+    ctx.textAlign = 'center'
+    ctx.fillText('ACCRETION DISK // BLACK HOLE', cx, h - 32)
+  } else if (artIdx === 1) {
+    // JWST Cosmic Nebula & Starfield
+    ctx.fillStyle = '#04010d'
+    ctx.fillRect(0, 0, w, h)
+
+    for (let i = 0; i < 5; i++) {
+      const gN = ctx.createRadialGradient(Math.random() * w, Math.random() * h, 10, w / 2, h / 2, 250)
+      gN.addColorStop(0, i % 2 === 0 ? 'rgba(168, 85, 247, 0.7)' : 'rgba(0, 240, 255, 0.6)')
+      gN.addColorStop(0.6, 'rgba(236, 72, 153, 0.3)')
+      gN.addColorStop(1, 'rgba(0, 0, 0, 0)')
+      ctx.fillStyle = gN
+      ctx.fillRect(0, 0, w, h)
+    }
+
+    for (let i = 0; i < 200; i++) {
+      ctx.fillStyle = '#ffffff'
+      ctx.fillRect(Math.random() * w, Math.random() * h, 1.5, 1.5)
+    }
+    ctx.fillStyle = '#00f0ff'
+    ctx.font = 'bold 20px monospace'
+    ctx.textAlign = 'center'
+    ctx.fillText('JWST CARINA NEBULA DEEP FIELD', w / 2, h - 32)
+  } else {
+    // Solar Flare & Plasma Loops
+    const gPl = ctx.createRadialGradient(w / 2, h / 2, 20, w / 2, h / 2, 260)
+    gPl.addColorStop(0, '#ffb300')
+    gPl.addColorStop(0.35, '#ff3a1a')
+    gPl.addColorStop(0.7, '#a855f7')
+    gPl.addColorStop(1, '#0a0015')
+    ctx.fillStyle = gPl
+    ctx.fillRect(0, 0, w, h)
+
+    ctx.strokeStyle = 'rgba(255, 220, 150, 0.8)'
+    ctx.lineWidth = 6
+    ctx.beginPath()
+    ctx.arc(w / 2, h / 2, 110, 0, Math.PI * 1.6)
+    ctx.stroke()
+
+    ctx.fillStyle = '#ffb300'
+    ctx.font = 'bold 20px monospace'
+    ctx.textAlign = 'center'
+    ctx.fillText('SOLAR DYNAMICS OBSERVATORY', w / 2, h - 32)
   }
-  noiseFill(ctx, w, h, 14)
+
+  noiseFill(ctx, w, h, 12)
+  return c
+}
+
+function phoneScreenTexture(): HTMLCanvasElement {
+  const w = 256
+  const h = 512
+  const [c, ctx] = mkCanvas(w, h)
+
+  ctx.fillStyle = '#090314'
+  ctx.fillRect(0, 0, w, h)
+
+  ctx.fillStyle = '#a090b8'
+  ctx.font = '16px monospace'
+  ctx.fillText('17:58', 16, 30)
+  ctx.fillText('SAT-TEL', 170, 30)
+
+  ctx.strokeStyle = 'rgba(168, 85, 247, 0.4)'
+  ctx.lineWidth = 1
+  ctx.beginPath()
+  ctx.moveTo(16, 44)
+  ctx.lineTo(w - 16, 44)
+  ctx.stroke()
+
+  // Orbit Trajectory Arc
+  ctx.strokeStyle = '#00f0ff'
+  ctx.lineWidth = 2.5
+  ctx.beginPath()
+  ctx.arc(w / 2, 170, 75, 0.2, Math.PI - 0.2)
+  ctx.stroke()
+
+  ctx.fillStyle = '#ff6b35'
+  ctx.beginPath()
+  ctx.arc(w / 2 + 55, 140, 7, 0, Math.PI * 2)
+  ctx.fill()
+
+  // Chart Wave
+  ctx.strokeStyle = 'rgba(0, 240, 255, 0.4)'
+  ctx.lineWidth = 2
+  ctx.beginPath()
+  let py = 320
+  ctx.moveTo(20, py)
+  for (let x = 20; x < w - 20; x += 20) {
+    py = 320 + Math.sin(x * 0.1) * 35 + (Math.random() - 0.5) * 8
+    ctx.lineTo(x, py)
+  }
+  ctx.stroke()
+
+  ctx.fillStyle = '#00f0ff'
+  ctx.font = 'bold 15px monospace'
+  ctx.fillText('ALTITUDE: 408.2 KM', 24, 410)
+  ctx.fillStyle = '#34d399'
+  ctx.fillText('TELEMETRY: NOMINAL', 24, 440)
+
+  noiseFill(ctx, w, h, 8)
   return c
 }
 
 function rugTexture(): HTMLCanvasElement {
-  const w = 512
-  const h = 512
+  const w = 1024
+  const h = 1024
   const [c, ctx] = mkCanvas(w, h)
   ctx.fillStyle = '#3a2230'
   ctx.fillRect(0, 0, w, h)
+
+  // Soft woven wool background weave
+  for (let y = 0; y < h; y += 4) {
+    ctx.strokeStyle = y % 8 === 0 ? '#4c2d3f' : '#2b1723'
+    ctx.globalAlpha = 0.25
+    ctx.lineWidth = 2
+    ctx.beginPath()
+    ctx.moveTo(0, y)
+    ctx.lineTo(w, y)
+    ctx.stroke()
+  }
+  ctx.globalAlpha = 1.0
+
   ctx.strokeStyle = '#6a3a44'
-  ctx.lineWidth = 6
-  ctx.strokeRect(24, 24, w - 48, h - 48)
+  ctx.lineWidth = 12
+  ctx.strokeRect(48, 48, w - 96, h - 96)
   ctx.strokeStyle = '#c8946a'
-  ctx.lineWidth = 2
-  ctx.strokeRect(40, 40, w - 80, h - 80)
-  // diamond pattern
-  ctx.strokeStyle = 'rgba(200,148,106,0.5)'
-  for (let y = 60; y < h - 60; y += 50) {
-    for (let x = 60; x < w - 60; x += 50) {
+  ctx.lineWidth = 4
+  ctx.strokeRect(80, 80, w - 160, h - 160)
+
+  // Diamond pattern
+  ctx.strokeStyle = 'rgba(200,148,106,0.6)'
+  ctx.lineWidth = 3
+  for (let y = 120; y < h - 120; y += 100) {
+    for (let x = 120; x < w - 120; x += 100) {
       ctx.beginPath()
-      ctx.moveTo(x, y - 18)
-      ctx.lineTo(x + 18, y)
-      ctx.lineTo(x, y + 18)
-      ctx.lineTo(x - 18, y)
+      ctx.moveTo(x, y - 36)
+      ctx.lineTo(x + 36, y)
+      ctx.lineTo(x, y + 36)
+      ctx.lineTo(x - 36, y)
       ctx.closePath()
       ctx.stroke()
     }
   }
-  noiseFill(ctx, w, h, 18)
+
+  // Woven wool fiber micro tufts
+  for (let i = 0; i < 3000; i++) {
+    const fx = Math.random() * w
+    const fy = Math.random() * h
+    ctx.strokeStyle = Math.random() > 0.5 ? 'rgba(200,148,106,0.3)' : 'rgba(106,58,68,0.3)'
+    ctx.lineWidth = 1
+    ctx.beginPath()
+    ctx.moveTo(fx, fy)
+    ctx.lineTo(fx + (Math.random() - 0.5) * 6, fy + (Math.random() - 0.5) * 6)
+    ctx.stroke()
+  }
+
+  noiseFill(ctx, w, h, 28)
   return c
 }
 
@@ -372,6 +662,75 @@ function steamSprite(): HTMLCanvasElement {
   return c
 }
 
+function clockFaceTexture(): HTMLCanvasElement {
+  const w = 512
+  const h = 512
+  const [c, ctx] = mkCanvas(w, h)
+  const cx = w / 2
+  const cy = h / 2
+  const r = w / 2 - 14
+
+  // Dial background - warm parchment cream gradient
+  const g = ctx.createRadialGradient(cx, cy, 10, cx, cy, r)
+  g.addColorStop(0, '#f9f6ee')
+  g.addColorStop(0.85, '#ede6d6')
+  g.addColorStop(1, '#ddd4c2')
+  ctx.fillStyle = g
+  ctx.beginPath()
+  ctx.arc(cx, cy, r, 0, Math.PI * 2)
+  ctx.fill()
+
+  // Outer ring tracks
+  ctx.strokeStyle = '#2a241e'
+  ctx.lineWidth = 4
+  ctx.beginPath()
+  ctx.arc(cx, cy, r - 6, 0, Math.PI * 2)
+  ctx.stroke()
+
+  ctx.lineWidth = 1.5
+  ctx.beginPath()
+  ctx.arc(cx, cy, r - 26, 0, Math.PI * 2)
+  ctx.stroke()
+
+  // Minute & Hour Tick Marks (60 total)
+  for (let i = 0; i < 60; i++) {
+    const ang = (i / 60) * Math.PI * 2 - Math.PI / 2
+    const isHour = i % 5 === 0
+    const innerR = isHour ? r - 26 : r - 16
+    const outerR = r - 6
+
+    ctx.strokeStyle = isHour ? '#1a1612' : '#8a7d6e'
+    ctx.lineWidth = isHour ? 4.5 : 1.8
+    ctx.beginPath()
+    ctx.moveTo(cx + Math.cos(ang) * innerR, cy + Math.sin(ang) * innerR)
+    ctx.lineTo(cx + Math.cos(ang) * outerR, cy + Math.sin(ang) * outerR)
+    ctx.stroke()
+  }
+
+  // Hour Numerals (1 - 12)
+  ctx.fillStyle = '#1a1612'
+  ctx.font = 'bold 36px "Inter", "Segoe UI", sans-serif'
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  const numR = r - 52
+  for (let hNum = 1; hNum <= 12; hNum++) {
+    const ang = (hNum / 12) * Math.PI * 2 - Math.PI / 2
+    const x = cx + Math.cos(ang) * numR
+    const y = cy + Math.sin(ang) * numR
+    ctx.fillText(hNum.toString(), x, y)
+  }
+
+  // Brand / Automatic text
+  ctx.fillStyle = '#7a6d5c'
+  ctx.font = 'bold 13px sans-serif'
+  ctx.fillText('CHRONO', cx, cy - 42)
+  ctx.font = '10px sans-serif'
+  ctx.fillText('AUTOMATIC', cx, cy + 42)
+
+  noiseFill(ctx, w, h, 8)
+  return c
+}
+
 // ---------- scene types ----------
 export type SceneState = 'loading' | 'intro' | 'idle' | 'sitting' | 'seated' | 'standingup'
 
@@ -382,6 +741,8 @@ export interface RoomSceneOptions {
   onState: (s: SceneState) => void
   onHover: (h: boolean) => void
   onReady: () => void
+  onTooltip?: (name: string | null, x?: number, y?: number) => void
+  onMusicToggle?: (playing: boolean) => void
   reducedMotion?: boolean
 }
 
@@ -391,6 +752,7 @@ export interface RoomScene {
   stepBack: () => void
   resize: () => void
   startIntro: () => void
+  toggleMusic: () => void
 }
 
 // ---------- camera keyframes ----------
@@ -584,23 +946,47 @@ export async function initRoomScene(opts: RoomSceneOptions): Promise<RoomScene> 
     side: THREE.DoubleSide,
   })
 
-  const fabricCanvas = (() => {
-    const [c, ctx] = mkCanvas(256, 256)
-    ctx.fillStyle = '#4a3a3a'
-    ctx.fillRect(0, 0, 256, 256)
-    noiseFill(ctx, 256, 256, 28)
-    return c
-  })()
-  const fabricMat = new THREE.MeshStandardMaterial({
-    map: texOpts(fabricCanvas),
+  const curtainCanvas = curtainFabricTexture({ base: '#2b2326', pattern: '#44383d', dark: '#181315' })
+  const curtainRough = roughnessFromCanvas(curtainCanvas, 0.9, 20)
+  const curtainNormal = normalMapFromCanvas(curtainCanvas, 2.2)
+  const curtainMat = new THREE.MeshStandardMaterial({
+    map: texOpts(curtainCanvas, [1, 2]),
+    roughnessMap: texOpts(curtainRough, [1, 2], false),
+    normalMap: texOpts(curtainNormal, [1, 2], false),
+    normalScale: new THREE.Vector2(1.5, 1.5),
     roughness: 0.95,
+    metalness: 0,
+    side: THREE.DoubleSide,
+  })
+
+  const rugCanvas = rugTexture()
+  const rugRough = roughnessFromCanvas(rugCanvas, 0.95, 25)
+  const rugNormal = normalMapFromCanvas(rugCanvas, 2.5)
+  const rugMat = new THREE.MeshStandardMaterial({
+    map: texOpts(rugCanvas),
+    roughnessMap: texOpts(rugRough, undefined, false),
+    normalMap: texOpts(rugNormal, undefined, false),
+    normalScale: new THREE.Vector2(1.8, 1.8),
+    roughness: 0.96,
     metalness: 0,
   })
 
-  const ceramicDark = new THREE.MeshStandardMaterial({ color: 0x2a2a2c, roughness: 0.4, metalness: 0.1 })
-  const plantPotMat = new THREE.MeshStandardMaterial({ color: 0x8a5a3a, roughness: 0.8, metalness: 0 })
+  const baseFabricCanvas = curtainFabricTexture({ base: '#3a2d2d', pattern: '#503f3f', dark: '#201818', w: 512, h: 512 })
+  const baseFabricRough = roughnessFromCanvas(baseFabricCanvas, 0.88, 18)
+  const baseFabricNormal = normalMapFromCanvas(baseFabricCanvas, 1.8)
+  const fabricMat = new THREE.MeshStandardMaterial({
+    map: texOpts(baseFabricCanvas),
+    roughnessMap: texOpts(baseFabricRough, undefined, false),
+    normalMap: texOpts(baseFabricNormal, undefined, false),
+    normalScale: new THREE.Vector2(1.2, 1.2),
+    roughness: 0.92,
+    metalness: 0,
+  })
+
+  const ceramicDark = new THREE.MeshStandardMaterial({ color: 0x2a2a2c, roughness: 0.35, metalness: 0.15 })
+  const plantPotMat = new THREE.MeshStandardMaterial({ color: 0x8a5a3a, roughness: 0.75, metalness: 0 })
   const bookMats = [0x8a3a3a, 0x3a5a8a, 0x6a6a3a, 0x5a3a6a, 0x3a6a5a, 0x8a6a3a].map(
-    (c) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.75, metalness: 0 })
+    (c) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.7, metalness: 0 })
   )
 
   // ----- room architecture -----
@@ -662,7 +1048,7 @@ export async function initRoomScene(opts: RoomSceneOptions): Promise<RoomScene> 
   const winW = 1.8
   const winH = 1.55
   const skyTex = texOpts(eveningSkyTexture(), undefined, true)
-  const skyMat = new THREE.MeshBasicMaterial({ map: skyTex, toneMapped: false })
+  const skyMat = new THREE.MeshStandardMaterial({ map: skyTex, toneMapped: false, roughness: 0.9, emissive: 0x000000, emissiveIntensity: 0.0 })
   const skyPlane = new THREE.Mesh(new THREE.PlaneGeometry(winW, winH), skyMat)
   skyPlane.position.set(winX, winY, winZ + 0.02)
   group.add(skyPlane)
@@ -685,7 +1071,7 @@ export async function initRoomScene(opts: RoomSceneOptions): Promise<RoomScene> 
   const sill = new THREE.Mesh(new THREE.BoxGeometry(winW + 0.3, 0.06, 0.18), frameMat)
   sill.position.set(winX, winY - winH / 2 - 0.05, winZ + 0.05)
   group.add(sill)
-  // curtain rod + curtains (mounted on back wall above window)
+  // curtain rod + 3D wavy fabric curtains (mounted on back wall above window)
   const rod = new THREE.Mesh(
     new THREE.CylinderGeometry(0.022, 0.022, winW + 0.7, 12),
     new THREE.MeshStandardMaterial({ color: 0x2a2a2a, metalness: 0.8, roughness: 0.4 })
@@ -693,14 +1079,42 @@ export async function initRoomScene(opts: RoomSceneOptions): Promise<RoomScene> 
   rod.rotation.z = Math.PI / 2
   rod.position.set(winX, winY + winH / 2 + 0.18, winZ + 0.06)
   group.add(rod)
-  const curtainMat = new THREE.MeshStandardMaterial({ color: 0x3a2230, roughness: 0.95, metalness: 0, side: THREE.DoubleSide })
-  const curtainL = new THREE.Mesh(new THREE.PlaneGeometry(0.42, winH + 0.5), curtainMat)
-  curtainL.position.set(winX - winW / 2 - 0.18, winY + 0.05, winZ + 0.05)
-  curtainL.rotation.z = 0.06
+
+
+
+  const makeCurtainGeo = (w: number, h: number) => {
+    const geo = new THREE.PlaneGeometry(w, h, 32, 32)
+    const pos = geo.attributes.position
+    for (let i = 0; i < pos.count; i++) {
+      const x = pos.getX(i)
+      const y = pos.getY(i)
+      const u = x / w + 0.5
+      // 3D vertical folds / waves
+      const wave = Math.sin(u * Math.PI * 7) * 0.04 + Math.cos(u * Math.PI * 14) * 0.015
+      // subtle tie-back taper near middle height
+      const normY = y / h
+      const taper = 1.0 - Math.pow(Math.sin((normY + 0.5) * Math.PI), 2) * 0.12
+      pos.setX(i, x * taper)
+      pos.setZ(i, wave)
+    }
+    geo.computeVertexNormals()
+    return geo
+  }
+
+  const curtainGeoL = makeCurtainGeo(0.55, winH + 0.5)
+  const curtainL = new THREE.Mesh(curtainGeoL, curtainMat)
+  curtainL.position.set(winX - winW / 2 - 0.12, winY + 0.05, winZ + 0.12)
+  curtainL.rotation.z = 0.04
+  curtainL.castShadow = true
+  curtainL.receiveShadow = true
   group.add(curtainL)
-  const curtainR = new THREE.Mesh(new THREE.PlaneGeometry(0.42, winH + 0.5), curtainMat)
-  curtainR.position.set(winX + winW / 2 + 0.18, winY + 0.05, winZ + 0.05)
-  curtainR.rotation.z = -0.06
+
+  const curtainGeoR = makeCurtainGeo(0.55, winH + 0.5)
+  const curtainR = new THREE.Mesh(curtainGeoR, curtainMat)
+  curtainR.position.set(winX + winW / 2 + 0.12, winY + 0.05, winZ + 0.12)
+  curtainR.rotation.z = -0.04
+  curtainR.castShadow = true
+  curtainR.receiveShadow = true
   group.add(curtainR)
 
   // ----- desk -----
@@ -752,17 +1166,77 @@ export async function initRoomScene(opts: RoomSceneOptions): Promise<RoomScene> 
     leg.castShadow = true
     deskGroup.add(leg)
   })
-  // desk drawer front
-  const drawer = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.22, 0.04), deskMat)
-  drawer.position.set(0.6, 0.5, 0.42)
-  deskGroup.add(drawer)
-  const handle = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.012, 0.012, 0.12, 10),
-    new THREE.MeshStandardMaterial({ color: 0x9a8a70, metalness: 0.8, roughness: 0.3 })
-  )
-  handle.rotation.z = Math.PI / 2
-  handle.position.set(0.6, 0.5, 0.45)
-  deskGroup.add(handle)
+  // desk pedestal cabinet unit (under desk top on the right side)
+  const cabGroup = new THREE.Group()
+  cabGroup.position.set(0.62, 0.355, 0.0)
+  deskGroup.add(cabGroup)
+
+  const cabW = 0.72
+  const cabH = 0.67
+  const cabD = 0.72
+  const tThick = 0.03
+
+  const cabOuterMat = deskMat
+  const cabInnerMat = new THREE.MeshStandardMaterial({ color: 0x241609, roughness: 0.8, metalness: 0 })
+
+  // Top & bottom plates
+  const topPlate = new THREE.Mesh(new THREE.BoxGeometry(cabW, tThick, cabD), cabOuterMat)
+  topPlate.position.y = cabH / 2 - tThick / 2
+  topPlate.castShadow = true
+  topPlate.receiveShadow = true
+  cabGroup.add(topPlate)
+
+  const botPlate = new THREE.Mesh(new THREE.BoxGeometry(cabW, tThick, cabD), cabOuterMat)
+  botPlate.position.y = -cabH / 2 + tThick / 2
+  botPlate.castShadow = true
+  botPlate.receiveShadow = true
+  cabGroup.add(botPlate)
+
+  // Left & right side panels
+  const sideL = new THREE.Mesh(new THREE.BoxGeometry(tThick, cabH - tThick * 2, cabD), cabOuterMat)
+  sideL.position.set(-cabW / 2 + tThick / 2, 0, 0)
+  sideL.castShadow = true
+  sideL.receiveShadow = true
+  cabGroup.add(sideL)
+
+  const sideR = new THREE.Mesh(new THREE.BoxGeometry(tThick, cabH - tThick * 2, cabD), cabOuterMat)
+  sideR.position.set(cabW / 2 - tThick / 2, 0, 0)
+  sideR.castShadow = true
+  sideR.receiveShadow = true
+  cabGroup.add(sideR)
+
+  // Back panel
+  const backPanel = new THREE.Mesh(new THREE.BoxGeometry(cabW - tThick * 2, cabH - tThick * 2, tThick), cabOuterMat)
+  backPanel.position.set(0, 0, -cabD / 2 + tThick / 2)
+  cabGroup.add(backPanel)
+
+  // Internal shelf divider
+  const shelf = new THREE.Mesh(new THREE.BoxGeometry(cabW - tThick * 2, tThick, cabD - tThick), cabInnerMat)
+  shelf.position.set(0, 0, 0)
+  cabGroup.add(shelf)
+
+  // Polished metal handle material
+  const handleMat = new THREE.MeshStandardMaterial({ color: 0xc8b088, metalness: 0.85, roughness: 0.25, envMapIntensity: 1.2 })
+
+  // Two stacked drawers with front faces & metallic handles
+  const dH = (cabH - tThick * 3) / 2 - 0.015
+  const dW = cabW - tThick * 2 - 0.015
+
+  const addDrawerUnit = (yPos: number) => {
+    const dBox = new THREE.Mesh(new THREE.BoxGeometry(dW, dH, 0.025), cabOuterMat)
+    dBox.position.set(0, yPos, cabD / 2 - 0.01)
+    dBox.castShadow = true
+    dBox.receiveShadow = true
+    cabGroup.add(dBox)
+
+    const hHandle = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.16, 12), handleMat)
+    hHandle.rotation.z = Math.PI / 2
+    hHandle.position.set(0, yPos, cabD / 2 + 0.018)
+    cabGroup.add(hHandle)
+  }
+
+  addDrawerUnit(cabH / 4 - 0.008)
+  addDrawerUnit(-cabH / 4 + 0.008)
 
   // ----- laptop -----
   const laptopGroup = new THREE.Group()
@@ -1151,7 +1625,7 @@ export async function initRoomScene(opts: RoomSceneOptions): Promise<RoomScene> 
   const bulbHalo2 = new THREE.Sprite(bulbHaloMat.clone())
   bulbHalo2.position.y = bulbY
   bulbHalo2.scale.set(0.5, 0.5, 1)
-  ;(bulbHalo2.material as any).opacity = 0.35
+    ; (bulbHalo2.material as any).opacity = 0.35
   shadeGroup.add(bulbHalo2)
 
   // the actual point light — placed at the bulb, follows the shade
@@ -1181,7 +1655,7 @@ export async function initRoomScene(opts: RoomSceneOptions): Promise<RoomScene> 
   // ----- mug: lathe-profiled ceramic with inner cavity, rim, handle, saucer -----
   // The mug now sits ON the desk (was sinking half-way through it before).
   const mugGroup = new THREE.Group()
-  mugGroup.position.set(-0.78, 0.765, -1.92)
+  mugGroup.position.set(-2.3, 0.765, -2.45)
   mugGroup.rotation.y = -0.35 // slight natural angle
   group.add(mugGroup)
 
@@ -1305,7 +1779,7 @@ export async function initRoomScene(opts: RoomSceneOptions): Promise<RoomScene> 
   steamGeo.setAttribute('position', new THREE.BufferAttribute(steamPos, 3))
   const steam = new THREE.Points(steamGeo, steamMat)
   // world-space position: mug base + coffee surface height (mug has no X/Z offset for the coffee)
-  steam.position.set(-0.78, 0.765 + coffeeY, -1.92)
+  steam.position.set(-2.3, 0.765 + coffeeY, -2.45)
   scene.add(steam)
 
   // ----- mouse + mousepad (front-right of laptop) -----
@@ -1323,21 +1797,24 @@ export async function initRoomScene(opts: RoomSceneOptions): Promise<RoomScene> 
   mouse.position.set(-0.62, 0.767, -1.86)
   mouse.castShadow = true
   group.add(mouse)
-  // cable laptop -> power strip (subtle)
-  const cableMat = new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.8 })
+  // cable laptop -> floor power strip (routed neatly along desk back leg)
+  const cableMat = new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.85, metalness: 0.1 })
   const cableCurve = new THREE.CatmullRomCurve3([
-    new THREE.Vector3(-1.4, 0.76, -1.85),
-    new THREE.Vector3(-1.1, 0.7, -1.7),
-    new THREE.Vector3(-0.6, 0.71, -1.6),
-    new THREE.Vector3(-0.2, 0.7, -1.5),
+    new THREE.Vector3(-1.4, 0.76, -2.65),
+    new THREE.Vector3(-0.4, 0.74, -2.68),
+    new THREE.Vector3(-0.35, 0.38, -2.7),
+    new THREE.Vector3(-0.32, 0.04, -2.72),
   ])
-  const cable = new THREE.Mesh(new THREE.TubeGeometry(cableCurve, 24, 0.006, 8, false), cableMat)
+  const cable = new THREE.Mesh(new THREE.TubeGeometry(cableCurve, 32, 0.005, 8, false), cableMat)
+  cable.castShadow = true
   group.add(cable)
+
   const strip = new THREE.Mesh(
-    new THREE.BoxGeometry(0.22, 0.03, 0.06),
-    new THREE.MeshStandardMaterial({ color: 0x1a1a1c, roughness: 0.6, metalness: 0.3 })
+    new THREE.BoxGeometry(0.24, 0.035, 0.08),
+    new THREE.MeshStandardMaterial({ color: 0x1a1a1c, roughness: 0.5, metalness: 0.3 })
   )
-  strip.position.set(-0.05, 0.755, -1.46)
+  strip.position.set(-0.3, 0.018, -2.72)
+  strip.castShadow = true
   group.add(strip)
 
   // ----- notebook + pen (right of laptop, behind mouse) -----
@@ -1447,10 +1924,10 @@ export async function initRoomScene(opts: RoomSceneOptions): Promise<RoomScene> 
     plantGroup.add(leaf)
   }
 
-  // ----- headphones hanging on the chair back (clutter = inhabited) -----
+  // ----- headphones resting on desk (left of laptop) -----
   const hpGroup = new THREE.Group()
-  hpGroup.position.set(-1.15, 0.92, -1.4)
-  hpGroup.rotation.set(0.1, -0.3, 0.2)
+  hpGroup.position.set(-2.18, 0.79, -2.15)
+  hpGroup.rotation.set(0.15, -0.2, 0.08)
   group.add(hpGroup)
   const hpMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1c, roughness: 0.5, metalness: 0.3 })
   const hpCushMat = new THREE.MeshStandardMaterial({ color: 0x2a2a2e, roughness: 0.85, metalness: 0 })
@@ -1466,14 +1943,14 @@ export async function initRoomScene(opts: RoomSceneOptions): Promise<RoomScene> 
   earR.rotation.z = Math.PI / 2
   earR.position.set(0.13, -0.02, 0)
   hpGroup.add(earR)
-  // dangling cable
+  // cable trailing on desk
   const hpCable = new THREE.Mesh(
     new THREE.TubeGeometry(
       new THREE.CatmullRomCurve3([
-        new THREE.Vector3(0.13, -0.04, 0),
-        new THREE.Vector3(0.18, -0.18, 0.02),
-        new THREE.Vector3(0.12, -0.32, 0.06),
-        new THREE.Vector3(0.0, -0.4, 0.1),
+        new THREE.Vector3(0.13, -0.01, 0),
+        new THREE.Vector3(0.25, -0.01, 0.06),
+        new THREE.Vector3(0.4, -0.01, 0.1),
+        new THREE.Vector3(0.55, -0.01, 0.08),
       ]),
       16, 0.004, 6, false
     ),
@@ -1510,15 +1987,51 @@ export async function initRoomScene(opts: RoomSceneOptions): Promise<RoomScene> 
   phone.position.set(0, 0.012 + (phoneH / 2) * Math.cos(phoneLean) + 0.004, 0.012 + (phoneH / 2) * Math.sin(phoneLean))
   phone.rotation.x = -phoneLean
   phoneGroup.add(phone)
-  // phone screen glow (front face)
+  // phone screen glow (front face with satellite telemetry)
+  const phoneScreenTex = texOpts(phoneScreenTexture(), undefined, true)
+  const phoneScreenMat = new THREE.MeshBasicMaterial({ map: phoneScreenTex })
   const phoneScreen = new THREE.Mesh(
     new THREE.PlaneGeometry(0.065, 0.13),
-    new THREE.MeshBasicMaterial({ color: 0x1a2a3a })
+    phoneScreenMat
   )
   phoneScreen.position.copy(phone.position)
   phoneScreen.position.z += 0.004
   phoneScreen.rotation.copy(phone.rotation)
   phoneGroup.add(phoneScreen)
+
+  // ----- Microcontroller Prototyping PCB Board (Space Hardware Builder Identity) -----
+  const pcbGroup = new THREE.Group()
+  pcbGroup.position.set(-2.2, 0.767, -2.55)
+  pcbGroup.rotation.y = 0.2
+  group.add(pcbGroup)
+
+  const pcbMat = new THREE.MeshStandardMaterial({ color: 0x1d0f36, roughness: 0.3, metalness: 0.2 })
+  const pcbBoard = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.008, 0.12), pcbMat)
+  pcbBoard.position.y = 0.004
+  pcbBoard.castShadow = true
+  pcbGroup.add(pcbBoard)
+
+  const traceMat = new THREE.MeshStandardMaterial({ color: 0xffb300, roughness: 0.2, metalness: 0.9 })
+  for (let i = 0; i < 4; i++) {
+    const trace = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.009, 0.004), traceMat)
+    trace.position.set(0, 0.005, -0.04 + i * 0.025)
+    pcbGroup.add(trace)
+  }
+
+  const chipMat = new THREE.MeshStandardMaterial({ color: 0x111115, roughness: 0.4, metalness: 0.8 })
+  const pcbChip = new THREE.Mesh(new THREE.BoxGeometry(0.048, 0.008, 0.048), chipMat)
+  pcbChip.position.set(0, 0.008, 0)
+  pcbGroup.add(pcbChip)
+
+  const ledColors = [0x00f0ff, 0xa855f7, 0xffb300, 0x34d399]
+  const pcbLeds: any[] = []
+  ledColors.forEach((col, idx) => {
+    const ledMat = new THREE.MeshStandardMaterial({ color: col, emissive: col, emissiveIntensity: 0.8, roughness: 0.2 })
+    const led = new THREE.Mesh(new THREE.SphereGeometry(0.006, 12, 12), ledMat)
+    led.position.set(-0.06 + idx * 0.04, 0.009, 0.04)
+    pcbGroup.add(led)
+    pcbLeds.push(led)
+  })
 
   // ----- sticky note on desk (discoverability hint + clutter) -----
   const stickyMat = new THREE.MeshStandardMaterial({ color: 0xf0d878, roughness: 0.85, metalness: 0, side: THREE.DoubleSide })
@@ -1675,7 +2188,7 @@ export async function initRoomScene(opts: RoomSceneOptions): Promise<RoomScene> 
   group.add(godray)
   // a second, narrower brighter ray
   const godray2 = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 3.0), godrayMat.clone())
-  ;(godray2.material as any).opacity = 0.06
+    ; (godray2.material as any).opacity = 0.06
   godray2.position.set(0.9, 1.5, -0.6)
   godray2.rotation.set(0, 0, 0.32)
   group.add(godray2)
@@ -1715,37 +2228,87 @@ export async function initRoomScene(opts: RoomSceneOptions): Promise<RoomScene> 
   const dust = new THREE.Points(dustGeo, dustMat)
   scene.add(dust)
 
-  // ----- wall clock (small detail) -----
+  // ----- wall clock (centered on back wall above laptop desk) -----
+  const clockGroup = new THREE.Group()
+  clockGroup.position.set(-1.4, 2.28, -2.96)
+  group.add(clockGroup)
+
+  // Outer Frame (dark wood / metal bezel)
+  const clockFrameMat = new THREE.MeshStandardMaterial({
+    color: 0x1e1914, roughness: 0.45, metalness: 0.35, envMapIntensity: 0.8
+  })
   const clockFrame = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.16, 0.16, 0.03, 28),
-    new THREE.MeshStandardMaterial({ color: 0x1a1410, roughness: 0.5 })
+    new THREE.CylinderGeometry(0.24, 0.24, 0.04, 48),
+    clockFrameMat
   )
   clockFrame.rotation.x = Math.PI / 2
-  clockFrame.position.set(-2.75, 2.35, -2.96)
-  group.add(clockFrame)
-  const clockFace = new THREE.Mesh(
-    new THREE.CircleGeometry(0.15, 28),
-    new THREE.MeshStandardMaterial({ color: 0xe8e2d0, roughness: 0.5 })
+  clockFrame.castShadow = true
+  clockGroup.add(clockFrame)
+
+  // Bevel brass inner trim ring
+  const clockTrim = new THREE.Mesh(
+    new THREE.TorusGeometry(0.218, 0.006, 12, 48),
+    new THREE.MeshStandardMaterial({ color: 0xc89848, metalness: 0.85, roughness: 0.25 })
   )
-  clockFace.position.set(-2.75, 2.35, -2.945)
-  group.add(clockFace)
-  const handMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.4 })
-  // clock hands — geometry offset so origin is at the clock center (real-time rotation)
-  const hourGeo = new THREE.BoxGeometry(0.013, 0.075, 0.004)
-  hourGeo.translate(0, 0.0375, 0)
+  clockTrim.position.z = 0.021
+  clockGroup.add(clockTrim)
+
+  // Clock Face with crisp procedural canvas texture
+  const clockTex = texOpts(clockFaceTexture(), undefined, true)
+  const clockFaceMat = new THREE.MeshStandardMaterial({
+    map: clockTex, roughness: 0.3, metalness: 0.0
+  })
+  const clockFace = new THREE.Mesh(
+    new THREE.CircleGeometry(0.215, 48),
+    clockFaceMat
+  )
+  clockFace.position.z = 0.022
+  clockFace.receiveShadow = true
+  clockGroup.add(clockFace)
+
+  // Clock Glass Lens (protective reflective transparent sheen)
+  const clockGlass = new THREE.Mesh(
+    new THREE.CircleGeometry(0.22, 48),
+    new THREE.MeshStandardMaterial({
+      color: 0xffffff, transparent: true, opacity: 0.18, roughness: 0.05, metalness: 0.1, envMapIntensity: 1.5
+    })
+  )
+  clockGlass.position.z = 0.028
+  clockGroup.add(clockGlass)
+
+  // Hands (hour, minute, second) with proper pivot offset
+  const handMat = new THREE.MeshStandardMaterial({ color: 0x141210, roughness: 0.3, metalness: 0.6 })
+
+  const hourGeo = new THREE.BoxGeometry(0.012, 0.09, 0.005)
+  hourGeo.translate(0, 0.045, 0)
   const hourHand = new THREE.Mesh(hourGeo, handMat)
-  hourHand.position.set(-2.75, 2.35, -2.942)
-  group.add(hourHand)
-  const minGeo = new THREE.BoxGeometry(0.009, 0.105, 0.004)
-  minGeo.translate(0, 0.0525, 0)
+  hourHand.position.z = 0.024
+  clockGroup.add(hourHand)
+
+  const minGeo = new THREE.BoxGeometry(0.008, 0.13, 0.004)
+  minGeo.translate(0, 0.065, 0)
   const minHand = new THREE.Mesh(minGeo, handMat)
-  minHand.position.set(-2.75, 2.35, -2.943)
-  group.add(minHand)
-  const secGeo = new THREE.BoxGeometry(0.003, 0.11, 0.002)
+  minHand.position.z = 0.025
+  clockGroup.add(minHand)
+
+  const secGeo = new THREE.BoxGeometry(0.003, 0.14, 0.003)
   secGeo.translate(0, 0.055, 0)
-  const secHand = new THREE.Mesh(secGeo, new THREE.MeshStandardMaterial({ color: 0xc8624a, roughness: 0.4, emissive: 0xc8624a, emissiveIntensity: 0.3 }))
-  secHand.position.set(-2.75, 2.35, -2.944)
-  group.add(secHand)
+  const secHand = new THREE.Mesh(
+    secGeo,
+    new THREE.MeshStandardMaterial({ color: 0xd84028, roughness: 0.3, emissive: 0xd84028, emissiveIntensity: 0.2 })
+  )
+  secHand.position.z = 0.026
+  clockGroup.add(secHand)
+
+  // Center Cap Pin
+  const centerCap = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.012, 0.012, 0.008, 20),
+    new THREE.MeshStandardMaterial({ color: 0xc89848, metalness: 0.9, roughness: 0.2 })
+  )
+  centerCap.rotation.x = Math.PI / 2
+  centerCap.position.z = 0.027
+  clockGroup.add(centerCap)
+
   // set initial rotation to current time
   const setClock = () => {
     const d = new Date()
@@ -1757,14 +2320,6 @@ export async function initRoomScene(opts: RoomSceneOptions): Promise<RoomScene> 
     secHand.rotation.z = -s * (Math.PI / 30)
   }
   setClock()
-  // clock tick marks
-  const tickMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.5 })
-  for (let i = 0; i < 12; i++) {
-    const a = (i / 12) * Math.PI * 2
-    const tick = new THREE.Mesh(new THREE.BoxGeometry(0.01, 0.02, 0.003), tickMat)
-    tick.position.set(-2.75 + Math.sin(a) * 0.12, 2.35 + Math.cos(a) * 0.12, -2.935)
-    group.add(tick)
-  }
 
   // ----- lights (rebalanced: warmer, lifted blacks, less mud) -----
   scene.add(new THREE.AmbientLight(0x8a7a6a, 0.45))
@@ -1840,6 +2395,575 @@ export async function initRoomScene(opts: RoomSceneOptions): Promise<RoomScene> 
   bokehPass.enabled = true
   composer.addPass(bokehPass)
   composer.renderToScreen = true
+
+  // ---------- interaction system ----------
+  interface InteractableDef {
+    name: string
+    hitMeshes: any[]
+    glowTargets: { mesh: any; color: number }[]
+    onClick: () => void
+  }
+
+  // Per-object animation triggers & click timestamps
+  let steamBurstTime = -10
+  let hpClickTime = -10
+  let mugClickTime = -10
+  let lampClickTime = -10
+  let mouseClickTime = -10
+  let lampOn = true
+  let phoneNotifTime = -10
+  let notebookFlipTime = -10
+  let plantRustleTime = -10
+  let mouseLedOn = false
+  let artGlowTime = -10
+  let clockPulseTime = -10
+  let pcbPulseTime = -10
+  let booksShiftTime = -10
+  let chairSwivelTime = -10
+  let winGlowTime = -10
+  let stickyLiftTime = -10
+  let currentArtIdx = 0
+  let activeInteractable: InteractableDef | null = null
+
+  // Smooth damped spring physics helpers for ultra-fluid physical bounces
+  function getSpring(elapsed: number, duration: number, bounces = 2.5, decay = 3.0): number {
+    if (elapsed < 0 || elapsed >= duration) return 0
+    const progress = elapsed / duration
+    return Math.sin(progress * Math.PI * bounces) * Math.exp(-progress * decay) * Math.sin(progress * Math.PI)
+  }
+  function getEaseOutBounce(elapsed: number, duration: number): number {
+    if (elapsed < 0 || elapsed >= duration) return 0
+    const p = elapsed / duration
+    return Math.sin(p * Math.PI)
+  }
+
+  // Store plant leaf original rotations for rustle animation
+  plantGroup.children.forEach((c: any) => { c.userData._origRZ = c.rotation.z })
+
+  function cycleArt() {
+    artGlowTime = clock
+    currentArtIdx = (currentArtIdx + 1) % 3
+    const newArtCanvas = artTexture(currentArtIdx)
+    artPlane.material.map = texOpts(newArtCanvas, undefined, true)
+    artPlane.material.needsUpdate = true
+  }
+
+  function playSfx(type: string) {
+    try {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
+      }
+      if (audioCtx.state === 'suspended') audioCtx.resume()
+      const ctx = audioCtx
+      const now = ctx.currentTime
+
+      if (type === 'headphones') {
+        const osc = ctx.createOscillator()
+        const g = ctx.createGain()
+        osc.type = 'sine'
+        osc.frequency.setValueAtTime(musicPlaying ? 400 : 800, now)
+        osc.frequency.exponentialRampToValueAtTime(musicPlaying ? 150 : 1200, now + 0.08)
+        g.gain.setValueAtTime(0.18, now)
+        g.gain.exponentialRampToValueAtTime(0.001, now + 0.08)
+        osc.connect(g); g.connect(ctx.destination)
+        osc.start(now); osc.stop(now + 0.09)
+      } else if (type === 'coffee') {
+        const osc = ctx.createOscillator()
+        const g = ctx.createGain()
+        osc.type = 'triangle'
+        osc.frequency.setValueAtTime(1400, now)
+        osc.frequency.exponentialRampToValueAtTime(800, now + 0.12)
+        g.gain.setValueAtTime(0.15, now)
+        g.gain.exponentialRampToValueAtTime(0.001, now + 0.12)
+        osc.connect(g); g.connect(ctx.destination)
+        osc.start(now); osc.stop(now + 0.13)
+
+        const bSize = Math.floor(ctx.sampleRate * 0.22)
+        const buf = ctx.createBuffer(1, bSize, ctx.sampleRate)
+        const d = buf.getChannelData(0)
+        for (let i = 0; i < bSize; i++) d[i] = (Math.random() * 2 - 1)
+        const src = ctx.createBufferSource()
+        src.buffer = buf
+        const filter = ctx.createBiquadFilter()
+        filter.type = 'bandpass'
+        filter.frequency.value = 1800
+        filter.Q.value = 2.5
+        const ng = ctx.createGain()
+        ng.gain.setValueAtTime(0.06, now + 0.04)
+        ng.gain.exponentialRampToValueAtTime(0.001, now + 0.24)
+        src.connect(filter); filter.connect(ng); ng.connect(ctx.destination)
+        src.start(now + 0.04)
+      } else if (type === 'lamp') {
+        const o1 = ctx.createOscillator()
+        const g1 = ctx.createGain()
+        o1.type = 'square'
+        o1.frequency.setValueAtTime(650, now)
+        o1.frequency.exponentialRampToValueAtTime(150, now + 0.04)
+        g1.gain.setValueAtTime(0.18, now)
+        g1.gain.exponentialRampToValueAtTime(0.001, now + 0.04)
+        o1.connect(g1); g1.connect(ctx.destination)
+        o1.start(now); o1.stop(now + 0.05)
+      } else if (type === 'phone') {
+        [880, 1760].forEach((freq, i) => {
+          const o = ctx.createOscillator()
+          const g = ctx.createGain()
+          o.type = 'sine'
+          o.frequency.value = freq
+          const t = now + i * 0.08
+          g.gain.setValueAtTime(0, t)
+          g.gain.linearRampToValueAtTime(0.14, t + 0.01)
+          g.gain.exponentialRampToValueAtTime(0.001, t + 0.16)
+          o.connect(g); g.connect(ctx.destination)
+          o.start(t); o.stop(t + 0.18)
+        })
+      } else if (type === 'notebook' || type === 'sticky') {
+        const bSize = Math.floor(ctx.sampleRate * 0.12)
+        const buf = ctx.createBuffer(1, bSize, ctx.sampleRate)
+        const d = buf.getChannelData(0)
+        for (let i = 0; i < bSize; i++) d[i] = (Math.random() * 2 - 1)
+        const src = ctx.createBufferSource()
+        src.buffer = buf
+        const filter = ctx.createBiquadFilter()
+        filter.type = 'bandpass'
+        filter.frequency.value = 1400
+        filter.Q.value = 1.5
+        const g = ctx.createGain()
+        g.gain.setValueAtTime(0.12, now)
+        g.gain.exponentialRampToValueAtTime(0.001, now + 0.12)
+        src.connect(filter); filter.connect(g); g.connect(ctx.destination)
+        src.start(now)
+      } else if (type === 'plant') {
+        const bSize = Math.floor(ctx.sampleRate * 0.2)
+        const buf = ctx.createBuffer(1, bSize, ctx.sampleRate)
+        const d = buf.getChannelData(0)
+        for (let i = 0; i < bSize; i++) d[i] = (Math.random() * 2 - 1)
+        const src = ctx.createBufferSource()
+        src.buffer = buf
+        const filter = ctx.createBiquadFilter()
+        filter.type = 'lowpass'
+        filter.frequency.value = 750
+        const g = ctx.createGain()
+        g.gain.setValueAtTime(0.09, now)
+        g.gain.exponentialRampToValueAtTime(0.001, now + 0.2)
+        src.connect(filter); filter.connect(g); g.connect(ctx.destination)
+        src.start(now)
+      } else if (type === 'mouse') {
+        const o = ctx.createOscillator()
+        const g = ctx.createGain()
+        o.type = 'triangle'
+        o.frequency.setValueAtTime(1200, now)
+        o.frequency.exponentialRampToValueAtTime(300, now + 0.02)
+        g.gain.setValueAtTime(0.18, now)
+        g.gain.exponentialRampToValueAtTime(0.001, now + 0.02)
+        o.connect(g); g.connect(ctx.destination)
+        o.start(now); o.stop(now + 0.03)
+      } else if (type === 'art' || type === 'window') {
+        [220, 330, 440, 660].forEach((freq) => {
+          const o = ctx.createOscillator()
+          const g = ctx.createGain()
+          o.type = 'sine'
+          o.frequency.value = freq
+          g.gain.setValueAtTime(0, now)
+          g.gain.linearRampToValueAtTime(0.035, now + 0.3)
+          g.gain.exponentialRampToValueAtTime(0.001, now + 1.1)
+          o.connect(g); g.connect(ctx.destination)
+          o.start(now); o.stop(now + 1.15)
+        })
+      } else if (type === 'clock') {
+        const o = ctx.createOscillator()
+        const g = ctx.createGain()
+        o.type = 'sine'
+        o.frequency.setValueAtTime(1046.5, now)
+        g.gain.setValueAtTime(0.18, now)
+        g.gain.exponentialRampToValueAtTime(0.001, now + 0.45)
+        o.connect(g); g.connect(ctx.destination)
+        o.start(now); o.stop(now + 0.48)
+      } else if (type === 'pcb') {
+        const notes = [523.25, 659.25, 783.99, 1046.5]
+        notes.forEach((freq, idx) => {
+          const o = ctx.createOscillator()
+          const g = ctx.createGain()
+          o.type = 'square'
+          o.frequency.value = freq
+          const t = now + idx * 0.05
+          g.gain.setValueAtTime(0.05, t)
+          g.gain.exponentialRampToValueAtTime(0.001, t + 0.06)
+          o.connect(g); g.connect(ctx.destination)
+          o.start(t); o.stop(t + 0.07)
+        })
+      } else if (type === 'books') {
+        const bSize = Math.floor(ctx.sampleRate * 0.15)
+        const buf = ctx.createBuffer(1, bSize, ctx.sampleRate)
+        const d = buf.getChannelData(0)
+        for (let i = 0; i < bSize; i++) d[i] = (Math.random() * 2 - 1)
+        const src = ctx.createBufferSource()
+        src.buffer = buf
+        const filter = ctx.createBiquadFilter()
+        filter.type = 'bandpass'
+        filter.frequency.value = 450
+        filter.Q.value = 1.0
+        const g = ctx.createGain()
+        g.gain.setValueAtTime(0.14, now)
+        g.gain.exponentialRampToValueAtTime(0.001, now + 0.15)
+        src.connect(filter); filter.connect(g); g.connect(ctx.destination)
+        src.start(now)
+      } else if (type === 'chair') {
+        const o = ctx.createOscillator()
+        const g = ctx.createGain()
+        o.type = 'sine'
+        o.frequency.setValueAtTime(90, now)
+        o.frequency.linearRampToValueAtTime(140, now + 0.4)
+        o.frequency.linearRampToValueAtTime(80, now + 0.75)
+        g.gain.setValueAtTime(0.07, now)
+        g.gain.exponentialRampToValueAtTime(0.001, now + 0.8)
+        o.connect(g); g.connect(ctx.destination)
+        o.start(now); o.stop(now + 0.82)
+      }
+    } catch { }
+  }
+
+  const interactables: InteractableDef[] = [
+    {
+      name: 'Studio Monitor Headphones — Click to toggle lofi beats',
+      hitMeshes: [band, earL, earR],
+      glowTargets: [
+        { mesh: earL, color: 0xa855f7 },
+        { mesh: earR, color: 0xa855f7 },
+        { mesh: band, color: 0xa855f7 },
+      ],
+      onClick: () => {
+        hpClickTime = clock
+        playSfx('headphones')
+        toggleMusic()
+      },
+    },
+    {
+      name: 'Hot Espresso Mug — Click to take a sip',
+      hitMeshes: [mug, coffee, saucer],
+      glowTargets: [{ mesh: mug, color: 0xffb300 }],
+      onClick: () => {
+        steamBurstTime = clock
+        mugClickTime = clock
+        playSfx('coffee')
+      },
+    },
+    {
+      name: 'Architect Desk Lamp — Click to toggle room light',
+      hitMeshes: [lampBase, shadeOuter, lowerArm, upperArm, switchBtn],
+      glowTargets: [{ mesh: shadeOuter, color: 0xffb060 }],
+      onClick: () => {
+        lampOn = !lampOn
+        lampClickTime = clock
+        playSfx('lamp')
+      },
+    },
+    {
+      name: 'Telemetry Smartphone — Click to check satellite updates',
+      hitMeshes: [phone, phoneScreen, standBase],
+      glowTargets: [{ mesh: phone, color: 0x00f0ff }],
+      onClick: () => {
+        phoneNotifTime = clock
+        playSfx('phone')
+      },
+    },
+    {
+      name: 'Engineering Lab Journal — Click to inspect research notes',
+      hitMeshes: [notebook, pen],
+      glowTargets: [{ mesh: notebook, color: 0xffb300 }],
+      onClick: () => {
+        notebookFlipTime = clock
+        playSfx('notebook')
+      },
+    },
+    {
+      name: 'Lush Houseplant — Click to rustle foliage',
+      hitMeshes: [pot, soil, ...plantGroup.children.filter((c: any) => c !== pot && c !== soil)],
+      glowTargets: [{ mesh: pot, color: 0x34d399 }],
+      onClick: () => {
+        plantRustleTime = clock
+        playSfx('plant')
+      },
+    },
+    {
+      name: 'Precision Gaming Mouse — Click to toggle RGB lighting',
+      hitMeshes: [mouse, pad],
+      glowTargets: [{ mesh: mouse, color: 0x00f0ff }],
+      onClick: () => {
+        mouseLedOn = !mouseLedOn
+        mouseClickTime = clock
+        playSfx('mouse')
+      },
+    },
+    {
+      name: 'Cosmic Observatory Poster — Click to cycle space artwork',
+      hitMeshes: [artPlane, artFrame],
+      glowTargets: [{ mesh: artPlane, color: 0xa855f7 }],
+      onClick: () => {
+        cycleArt()
+        playSfx('art')
+      },
+    },
+    {
+      name: 'Analog Wall Clock — Click to trigger clock chime',
+      hitMeshes: [clockFace, clockFrame, clockGlass],
+      glowTargets: [{ mesh: clockFace, color: 0xffb300 }],
+      onClick: () => {
+        clockPulseTime = clock
+        playSfx('clock')
+      },
+    },
+    {
+      name: 'Microcontroller Prototype PCB — Click to run hardware diagnostics',
+      hitMeshes: [pcbBoard, pcbChip, ...pcbLeds],
+      glowTargets: [{ mesh: pcbBoard, color: 0xa855f7 }],
+      onClick: () => {
+        pcbPulseTime = clock
+        playSfx('pcb')
+      },
+    },
+    {
+      name: 'Astrophysics Textbooks — Click to adjust book stack',
+      hitMeshes: deskBooksGroup.children,
+      glowTargets: [{ mesh: deskBooksGroup.children[0], color: 0x4d7cff }],
+      onClick: () => {
+        booksShiftTime = clock
+        playSfx('books')
+      },
+    },
+    {
+      name: 'Ergonomic Office Chair — Click to swivel chair',
+      hitMeshes: [seat, back],
+      glowTargets: [{ mesh: seat, color: 0xa855f7 }],
+      onClick: () => {
+        chairSwivelTime = clock
+        playSfx('chair')
+      },
+    },
+    {
+      name: 'Observatory Window — Click to adjust starlight glow',
+      hitMeshes: [skyPlane],
+      glowTargets: [{ mesh: skyPlane, color: 0x00f0ff }],
+      onClick: () => {
+        winGlowTime = clock
+        playSfx('window')
+      },
+    },
+    {
+      name: 'Desk Memo Note — Click to inspect memo',
+      hitMeshes: [sticky],
+      glowTargets: [{ mesh: sticky, color: 0xffb300 }],
+      onClick: () => {
+        stickyLiftTime = clock
+        playSfx('sticky')
+      },
+    },
+  ]
+
+  // Save original emissive states for restoration after hover
+  const origEmissives = new Map<any, { color: number; intensity: number }>()
+  interactables.forEach((ia) => {
+    ia.glowTargets.forEach((gt) => {
+      const mat = gt.mesh ? gt.mesh.material : null
+      if (mat && mat.emissive) {
+        origEmissives.set(gt.mesh, {
+          color: mat.emissive.getHex(),
+          intensity: (mat.emissive.getHex() !== 0) ? (mat.emissiveIntensity ?? 0) : 0,
+        })
+      } else if (mat) {
+        origEmissives.set(gt.mesh, {
+          color: 0,
+          intensity: 0,
+        })
+      }
+    })
+  })
+
+  // Flat mesh-to-interactable lookup for raycasting
+  const allInteractMeshes: any[] = []
+  const meshToIA = new Map<any, InteractableDef>()
+  interactables.forEach((ia) => {
+    ia.hitMeshes.forEach((m) => {
+      allInteractMeshes.push(m)
+      meshToIA.set(m, ia)
+    })
+  })
+
+  // ---------- procedural lofi music (Web Audio API) ----------
+  let audioCtx: AudioContext | null = null
+  let musicPlaying = false
+  let lofiCleanup: (() => void) | null = null
+
+  function startLofiMusic() {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
+    }
+    if (audioCtx.state === 'suspended') audioCtx.resume()
+    const ctx = audioCtx!
+    const masterGain = ctx.createGain()
+    masterGain.gain.setValueAtTime(0, ctx.currentTime)
+    masterGain.gain.linearRampToValueAtTime(0.55, ctx.currentTime + 1.5)
+    masterGain.connect(ctx.destination)
+
+    // Vinyl crackle
+    const crackleLen = 4
+    const crackleBuffer = ctx.createBuffer(1, ctx.sampleRate * crackleLen, ctx.sampleRate)
+    const crackleData = crackleBuffer.getChannelData(0)
+    for (let i = 0; i < crackleData.length; i++) {
+      crackleData[i] = (Math.random() * 2 - 1) * (Math.random() > 0.985 ? 0.25 : 0.015)
+    }
+    const crackle = ctx.createBufferSource()
+    crackle.buffer = crackleBuffer
+    crackle.loop = true
+    const crackleFilter = ctx.createBiquadFilter()
+    crackleFilter.type = 'bandpass'
+    crackleFilter.frequency.value = 2800
+    crackleFilter.Q.value = 0.4
+    const crackleGain = ctx.createGain()
+    crackleGain.gain.value = 0.18
+    crackle.connect(crackleFilter)
+    crackleFilter.connect(crackleGain)
+    crackleGain.connect(masterGain)
+    crackle.start()
+
+    const BPM = 72
+    const beatDur = 60 / BPM
+    const barDur = beatDur * 4
+    const chords = [
+      [146.83, 174.61, 220, 261.63, 329.63],
+      [196, 246.94, 293.66, 349.23, 440],
+      [130.81, 164.81, 196, 246.94, 311.13],
+      [110, 130.81, 164.81, 196, 261.63],
+    ]
+
+    function noiseBuf(dur: number) {
+      const buf = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * dur), ctx.sampleRate)
+      const d = buf.getChannelData(0)
+      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1
+      return buf
+    }
+
+    function playKick(time: number) {
+      const o = ctx.createOscillator()
+      o.type = 'sine'
+      o.frequency.setValueAtTime(150, time)
+      o.frequency.exponentialRampToValueAtTime(35, time + 0.12)
+      const g = ctx.createGain()
+      g.gain.setValueAtTime(0.50, time)
+      g.gain.exponentialRampToValueAtTime(0.001, time + 0.28)
+      o.connect(g); g.connect(masterGain)
+      o.start(time); o.stop(time + 0.3)
+    }
+
+    function playHihat(time: number, loud: boolean) {
+      const d = loud ? 0.06 : 0.035
+      const src = ctx.createBufferSource()
+      src.buffer = noiseBuf(d)
+      const f = ctx.createBiquadFilter()
+      f.type = 'highpass'; f.frequency.value = 7500
+      const g = ctx.createGain()
+      g.gain.setValueAtTime(loud ? 0.12 : 0.05, time)
+      g.gain.exponentialRampToValueAtTime(0.001, time + d)
+      src.connect(f); f.connect(g); g.connect(masterGain)
+      src.start(time)
+    }
+
+    function playSnare(time: number) {
+      const src = ctx.createBufferSource()
+      src.buffer = noiseBuf(0.1)
+      const f = ctx.createBiquadFilter()
+      f.type = 'bandpass'; f.frequency.value = 2800
+      const g = ctx.createGain()
+      g.gain.setValueAtTime(0.22, time)
+      g.gain.exponentialRampToValueAtTime(0.001, time + 0.12)
+      src.connect(f); f.connect(g); g.connect(masterGain)
+      src.start(time)
+      const o = ctx.createOscillator()
+      o.type = 'triangle'; o.frequency.value = 185
+      const og = ctx.createGain()
+      og.gain.setValueAtTime(0.18, time)
+      og.gain.exponentialRampToValueAtTime(0.001, time + 0.08)
+      o.connect(og); og.connect(masterGain)
+      o.start(time); o.stop(time + 0.12)
+    }
+
+    function playPad(freqs: number[], time: number, dur: number) {
+      freqs.forEach((freq) => {
+        const o = ctx.createOscillator()
+        o.type = 'sawtooth'; o.frequency.value = freq
+        const f = ctx.createBiquadFilter()
+        f.type = 'lowpass'; f.frequency.value = 600 + Math.random() * 200; f.Q.value = 0.8
+        const g = ctx.createGain()
+        g.gain.setValueAtTime(0, time)
+        g.gain.linearRampToValueAtTime(0.045, time + 0.15)
+        g.gain.setValueAtTime(0.045, time + dur - 0.2)
+        g.gain.linearRampToValueAtTime(0, time + dur)
+        o.connect(f); f.connect(g); g.connect(masterGain)
+        o.start(time); o.stop(time + dur + 0.1)
+      })
+    }
+
+    function playBass(freq: number, time: number, dur: number) {
+      const o = ctx.createOscillator()
+      o.type = 'sine'; o.frequency.value = freq / 2
+      const g = ctx.createGain()
+      g.gain.setValueAtTime(0, time)
+      g.gain.linearRampToValueAtTime(0.25, time + 0.04)
+      g.gain.setValueAtTime(0.25, time + dur * 0.7)
+      g.gain.linearRampToValueAtTime(0, time + dur)
+      o.connect(g); g.connect(masterGain)
+      o.start(time); o.stop(time + dur + 0.1)
+    }
+
+
+    function scheduleBar(barIdx: number, t: number) {
+      const ch = chords[barIdx % 4]
+      playPad(ch, t, barDur)
+      playBass(ch[0], t, beatDur * 2)
+      playBass(ch[0] * 1.5, t + beatDur * 2, beatDur * 2)
+      for (let b = 0; b < 4; b++) {
+        const bt = t + b * beatDur
+        if (b === 0 || b === 2) playKick(bt)
+        if (b === 1 || b === 3) playSnare(bt)
+        playHihat(bt, b % 2 === 0)
+        playHihat(bt + beatDur * 0.5, false)
+      }
+    }
+
+    let nextTime = ctx.currentTime + 0.15
+    let barIndex = 0
+    const ahead = 0.3
+    let schedTimer: number | null = null
+    function loopSchedule() {
+      while (nextTime < ctx.currentTime + ahead) {
+        scheduleBar(barIndex, nextTime)
+        nextTime += barDur
+        barIndex++
+      }
+      schedTimer = window.setTimeout(loopSchedule, 120) as unknown as number
+    }
+    loopSchedule()
+
+    musicPlaying = true
+    opts.onMusicToggle?.(true)
+
+    lofiCleanup = () => {
+      if (schedTimer !== null) clearTimeout(schedTimer)
+      try { crackle.stop() } catch { }
+      masterGain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.5)
+      window.setTimeout(() => { try { masterGain.disconnect() } catch { } }, 600)
+      musicPlaying = false
+      opts.onMusicToggle?.(false)
+    }
+  }
+
+  function stopLofiMusic() {
+    if (lofiCleanup) { lofiCleanup(); lofiCleanup = null }
+  }
+
+  function toggleMusic() {
+    if (musicPlaying) stopLofiMusic()
+    else startLofiMusic()
+  }
 
   // ---------- animation state machine ----------
   let state: SceneState = 'loading'
@@ -1918,25 +3042,47 @@ export async function initRoomScene(opts: RoomSceneOptions): Promise<RoomScene> 
     const rect = renderer.domElement.getBoundingClientRect()
     pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1
     pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1
-    if (state !== 'idle') return
+    if (state !== 'idle') {
+      if (activeInteractable) { activeInteractable = null; opts.onTooltip?.(null) }
+      return
+    }
     raycaster.setFromCamera(pointer, camera)
-    const hit = raycaster.intersectObject(screenMesh, false)
-    const h = hit.length > 0
+    // laptop screen has priority
+    const laptopHit = raycaster.intersectObject(screenMesh, false)
+    const h = laptopHit.length > 0
     if (h !== hovering) {
       hovering = h
       opts.onHover(h)
-      renderer.domElement.style.cursor = h ? 'pointer' : 'default'
     }
+    // check interactable objects
+    let found: InteractableDef | null = null
+    if (!h) {
+      const hits = raycaster.intersectObjects(allInteractMeshes, false)
+      if (hits.length > 0) found = meshToIA.get(hits[0].object) || null
+    }
+    if (found !== activeInteractable) {
+      activeInteractable = found
+      opts.onTooltip?.(found ? found.name : null, e.clientX, e.clientY)
+    } else if (found) {
+      opts.onTooltip?.(found.name, e.clientX, e.clientY)
+    }
+    renderer.domElement.style.cursor = (h || found) ? 'pointer' : 'default'
   }
   function onClick(e: MouseEvent) {
     if (state !== 'idle') return
-    // raycast directly at the click/tap point so touch devices (no prior hover) work
     const rect = renderer.domElement.getBoundingClientRect()
     pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1
     pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1
     raycaster.setFromCamera(pointer, camera)
-    const hit = raycaster.intersectObject(screenMesh, false)
-    if (hit.length > 0) startSitDown()
+    // laptop click → sit down
+    const laptopHit = raycaster.intersectObject(screenMesh, false)
+    if (laptopHit.length > 0) { startSitDown(); return }
+    // interactable click
+    const hits = raycaster.intersectObjects(allInteractMeshes, false)
+    if (hits.length > 0) {
+      const ia = meshToIA.get(hits[0].object)
+      if (ia) ia.onClick()
+    }
   }
   renderer.domElement.addEventListener('pointermove', onPointerMove)
   renderer.domElement.addEventListener('click', onClick)
@@ -2004,13 +3150,19 @@ export async function initRoomScene(opts: RoomSceneOptions): Promise<RoomScene> 
     const sway = Math.sin(idleClock * 0.5) * 0.012
     const sway2 = Math.cos(idleClock * 0.37) * 0.008
 
-    // lamp flicker (near-zero amplitude) — base matches the new 2.8-intensity bulb
-    lampLight.intensity = 2.8 + Math.sin(idleClock * 11.0) * 0.05 + Math.sin(idleClock * 3.3) * 0.04
+    // lamp toggle + flicker
+    const lampTarget = lampOn ? 2.8 : 0.0
+    const lampFlicker = lampOn ? Math.sin(idleClock * 11.0) * 0.05 + Math.sin(idleClock * 3.3) * 0.04 : 0
+    lampLight.intensity = lerp(lampLight.intensity, lampTarget + lampFlicker, 0.08)
+      ; (bulbCore.material as any).color.setRGB(lampOn ? 1 : 0.1, lampOn ? 0.95 : 0.08, lampOn ? 0.83 : 0.06)
+      ; (bulbHaloMat as any).opacity = lerp((bulbHaloMat as any).opacity, lampOn ? 0.85 : 0, 0.08)
+      ; (bulbHalo2.material as any).opacity = lerp((bulbHalo2.material as any).opacity, lampOn ? 0.35 : 0, 0.08)
+      ; (shadeInner.material as any).emissiveIntensity = lerp((shadeInner.material as any).emissiveIntensity, lampOn ? 0.85 : 0, 0.08)
     // standby LED breathing (only when not seated — screen is "asleep")
     const ledOn = state !== 'seated'
     const ledPulse = ledOn ? 0.7 + Math.sin(idleClock * 1.2) * 0.25 : 0.0
-    ;(standbyLed.material as any).opacity = lerp((standbyLed.material as any).opacity, ledPulse, 0.1)
-    ;(ledHalo.material as any).opacity = lerp((ledHalo.material as any).opacity, ledPulse * 0.45, 0.1)
+      ; (standbyLed.material as any).opacity = lerp((standbyLed.material as any).opacity, ledPulse, 0.1)
+      ; (ledHalo.material as any).opacity = lerp((ledHalo.material as any).opacity, ledPulse * 0.45, 0.1)
     standbyLed.visible = ledOn
     ledHalo.visible = ledOn
 
@@ -2026,7 +3178,7 @@ export async function initRoomScene(opts: RoomSceneOptions): Promise<RoomScene> 
       }
     }
     sp.needsUpdate = true
-    steamMat.opacity = 0.18 + Math.sin(idleClock * 0.8) * 0.06
+    if (clock - steamBurstTime > 2.5) steamMat.opacity = 0.18 + Math.sin(idleClock * 0.8) * 0.06
 
     // dust motes drifting in the light beams
     const dp = dustGeo.attributes.position as any
@@ -2044,14 +3196,293 @@ export async function initRoomScene(opts: RoomSceneOptions): Promise<RoomScene> 
 
     // god-ray gentle shimmer
     godrayMat.opacity = 0.06 + Math.sin(idleClock * 0.6) * 0.012
-    ;(godray2.material as any).opacity = 0.05 + Math.cos(idleClock * 0.45) * 0.012
+      ; (godray2.material as any).opacity = 0.05 + Math.cos(idleClock * 0.45) * 0.012
 
     // real-time wall clock
     setClock()
 
     // hover glow rim on the laptop screen
     const targetGlow = hovering ? 0.5 + Math.sin(idleClock * 3) * 0.08 : 0.0
-    ;(screenGlow.material as any).opacity = lerp((screenGlow.material as any).opacity, targetGlow, 0.12)
+      ; (screenGlow.material as any).opacity = lerp((screenGlow.material as any).opacity, targetGlow, 0.12)
+
+    // ---------- interactable hover glow ----------
+    interactables.forEach((ia) => {
+      const isActive = ia === activeInteractable
+      ia.glowTargets.forEach((gt) => {
+        const mat = gt.mesh ? gt.mesh.material : null
+        const orig = origEmissives.get(gt.mesh)
+        if (!mat || !orig) return
+        if (musicPlaying && (gt.mesh === earL || gt.mesh === earR || gt.mesh === band)) return
+        if (isActive) {
+          const pulse = 0.45 + Math.sin(idleClock * 3.5) * 0.15
+          if (mat.emissive) {
+            mat.emissive.setHex(gt.color)
+            mat.emissiveIntensity = lerp(mat.emissiveIntensity, pulse, 0.12)
+          }
+        } else {
+          if (mat.emissive) {
+            mat.emissive.setHex(orig.color)
+            mat.emissiveIntensity = lerp(mat.emissiveIntensity, orig.intensity, 0.08)
+          }
+        }
+      })
+    })
+
+    // Headphones music glow & bounce click animation
+    if (musicPlaying) {
+      const mP = 0.25 + Math.sin(idleClock * 2.5) * 0.15
+      if ((earL.material as any)?.emissive) {
+        ; (earL.material as any).emissive.setHex(0x7a4aff)
+          ; (earL.material as any).emissiveIntensity = mP
+      }
+      if ((earR.material as any)?.emissive) {
+        ; (earR.material as any).emissive.setHex(0x7a4aff)
+          ; (earR.material as any).emissiveIntensity = mP
+      }
+      if ((band.material as any)?.emissive) {
+        ; (band.material as any).emissive.setHex(0x5a3aaa)
+          ; (band.material as any).emissiveIntensity = mP * 0.5
+      }
+    }
+    const hpT = clock - hpClickTime
+    if (hpT >= 0 && hpT < 1.0) {
+      const s = getSpring(hpT, 1.0, 3, 2.5)
+      hpGroup.scale.set(1 + s * 0.22, 1 - s * 0.18, 1 + s * 0.22)
+      hpGroup.rotation.z = 0.08 + s * 0.15
+    } else {
+      hpGroup.scale.set(1, 1, 1)
+      hpGroup.rotation.z = 0.08
+    }
+
+    // Espresso mug sip lift, squish bounce & steam burst
+    const mgT = clock - mugClickTime
+    if (mgT >= 0 && mgT < 1.2) {
+      const s = getSpring(mgT, 1.2, 2.5, 2.5)
+      const b = getEaseOutBounce(mgT, 1.2)
+      mugGroup.position.y = 0.765 + b * 0.04 // mug rest y = 0.765
+      mugGroup.rotation.z = -0.35 + s * 0.18
+      mugGroup.scale.set(1 + s * 0.12, 1 - s * 0.08, 1 + s * 0.12)
+    } else {
+      mugGroup.position.y = 0.765
+      mugGroup.rotation.z = -0.35
+      mugGroup.scale.set(1, 1, 1)
+    }
+    const stBurst = clock - steamBurstTime
+    if (stBurst >= 0 && stBurst < 2.5) {
+      steamMat.opacity = 0.4 + (1 - stBurst / 2.5) * 0.55
+    }
+
+    // Desk lamp switch dip & arm spring recoil animation
+    const lmT = clock - lampClickTime
+    if (lmT >= 0 && lmT < 0.9) {
+      const s = getSpring(lmT, 0.9, 3, 3)
+      const b = getEaseOutBounce(lmT, 0.4)
+      shadeGroup.rotation.z = -0.45 - s * 0.25
+      switchBtn.position.y = 0.045 - b * 0.008
+    } else {
+      shadeGroup.rotation.z = -0.45
+      switchBtn.position.y = 0.045
+    }
+
+    // Phone notification pop, vibration shake & screen flash
+    const phNotif = clock - phoneNotifTime
+    if (phNotif >= 0 && phNotif < 1.8) {
+      const s = getSpring(phNotif, 1.2, 4, 3)
+      const vib = phNotif < 0.6 ? Math.sin(phNotif * 60) * 0.006 * (1 - phNotif / 0.6) : 0
+      phoneGroup.scale.setScalar(1 + s * 0.2)
+      phoneGroup.position.x = -2.0 + vib
+      const flash = Math.floor(phNotif * 8) % 2 === 0
+      if ((phoneScreen.material as any)?.color) {
+        ; (phoneScreen.material as any).color.setHex(flash ? 0x00f0ff : 0x1a2a3a)
+      }
+    } else {
+      phoneGroup.scale.setScalar(1)
+      phoneGroup.position.x = -2.0
+      if ((phoneScreen.material as any)?.color) {
+        ; (phoneScreen.material as any).color.setHex(0x1a2a3a)
+      }
+    }
+
+    // Notebook 3D arc lift, cover flip & pen roll animation
+    const nbFlip = clock - notebookFlipTime
+    if (nbFlip >= 0 && nbFlip < 1.1) {
+      const s = getSpring(nbFlip, 1.1, 2.5, 2.2)
+      const b = getEaseOutBounce(nbFlip, 1.1)
+      notebook.position.y = 0.772 + b * 0.045
+      notebook.rotation.x = Math.sin((nbFlip / 1.1) * Math.PI) * 0.35
+      notebook.scale.set(1 + s * 0.1, 1, 1 + s * 0.1)
+      pen.position.x = -0.5 + s * 0.025
+    } else {
+      notebook.position.y = 0.772
+      notebook.rotation.x = 0
+      notebook.scale.set(1, 1, 1)
+      pen.position.x = -0.5
+    }
+
+    // Houseplant pot spring recoil & leaf foliage rustle wave
+    const plRust = clock - plantRustleTime
+    if (plRust >= 0 && plRust < 2.5) {
+      const fade = 1 - plRust / 2.5
+      const s = getSpring(plRust, 1.5, 4, 2.5)
+      pot.rotation.z = s * 0.08
+      pot.scale.set(1 + s * 0.1, 1 - s * 0.08, 1 + s * 0.1)
+      plantGroup.children.forEach((child: any, idx: number) => {
+        if (idx > 2 && child.userData._origRZ !== undefined) {
+          child.rotation.z = child.userData._origRZ + Math.sin(clock * 16 + idx * 1.7) * 0.06 * fade
+        }
+      })
+    } else {
+      pot.rotation.z = 0
+      pot.scale.set(1, 1, 1)
+      plantGroup.children.forEach((child: any, idx: number) => {
+        if (idx > 2 && child.userData._origRZ !== undefined) {
+          child.rotation.z = child.userData._origRZ
+        }
+      })
+    }
+
+    // Gaming mouse physical click press, squish scale & rainbow RGB spectrum
+    const msT = clock - mouseClickTime
+    if (msT >= 0 && msT < 0.8) {
+      const s = getSpring(msT, 0.8, 3, 3)
+      const b = getEaseOutBounce(msT, 0.3)
+      mouse.position.y = 0.767 - b * 0.007
+      mouse.rotation.x = -b * 0.08
+      mouse.scale.set(1 + s * 0.12, 0.55 - b * 0.08, 1.6 + s * 0.1)
+    } else {
+      mouse.position.y = 0.767
+      mouse.rotation.x = 0
+      mouse.scale.set(1, 0.55, 1.6)
+    }
+    if ((mouse.material as any)?.emissive) {
+      const rgbColor = mouseLedOn ? new THREE.Color().setHSL((clock * 0.5) % 1, 0.9, 0.5).getHex() : 0x000000
+        ; (mouse.material as any).emissive.setHex(rgbColor)
+        ; (mouse.material as any).emissiveIntensity = mouseLedOn ? 0.45 + Math.sin(idleClock * 5) * 0.1 : 0
+    }
+
+    // Cosmic Poster frame pop off wall & nebula aura pulse
+    const arGlow = clock - artGlowTime
+    if (arGlow >= 0 && arGlow < 1.8) {
+      const s = getSpring(arGlow, 1.5, 3, 2.5)
+      const b = getEaseOutBounce(arGlow, 1.8)
+      artFrame.position.x = -3.44 + b * 0.04
+      artPlane.position.x = -3.4 + b * 0.04
+      artFrame.rotation.z = s * 0.08
+      artPlane.rotation.z = s * 0.08
+      if ((artPlane.material as any)?.emissiveIntensity !== undefined) {
+        ; (artPlane.material as any).emissiveIntensity = 0.18 + Math.sin((arGlow / 1.8) * Math.PI) * 0.75
+      }
+    } else {
+      artFrame.position.x = -3.44
+      artPlane.position.x = -3.4
+      artFrame.rotation.z = 0
+      artPlane.rotation.z = 0
+      if ((artPlane.material as any)?.emissiveIntensity !== undefined) {
+        ; (artPlane.material as any).emissiveIntensity = 0.18
+      }
+    }
+
+    // Analog wall clock chime recoil spring pop & face glow
+    const clPulse = clock - clockPulseTime
+    if (clPulse >= 0 && clPulse < 1.2) {
+      const s = getSpring(clPulse, 1.2, 3.5, 2.5)
+      const b = getEaseOutBounce(clPulse, 1.2)
+      clockGroup.scale.set(1 + s * 0.2, 1 + s * 0.2, 1 + s * 0.15)
+      if ((clockFace.material as any)?.emissive) {
+        ; (clockFace.material as any).emissive.setHex(0xf0d878)
+          ; (clockFace.material as any).emissiveIntensity = Math.sin(b * Math.PI) * 0.6
+      }
+    } else {
+      clockGroup.scale.set(1, 1, 1)
+      if ((clockFace.material as any)?.emissive) {
+        ; (clockFace.material as any).emissiveIntensity = 0
+      }
+    }
+
+    // PCB board spring pop & high-speed LED knight-rider scan
+    const pcPulse = clock - pcbPulseTime
+    if (pcPulse >= 0 && pcPulse < 2.0) {
+      const s = getSpring(pcPulse, 1.5, 4, 2.8)
+      pcbGroup.scale.setScalar(1 + s * 0.2)
+      pcbGroup.position.y = 0.767 + s * 0.02 // pcb rest y = 0.767
+      const activeIdx = Math.floor(pcPulse * 12) % 4
+      pcbLeds.forEach((led: any, i: number) => {
+        if (led.material?.emissiveIntensity !== undefined) {
+          led.material.emissiveIntensity = i === activeIdx ? 1.8 : 0.2
+        }
+      })
+    } else {
+      pcbGroup.scale.setScalar(1)
+      pcbGroup.position.y = 0.767
+      pcbLeds.forEach((led: any) => {
+        if (led.material?.emissiveIntensity !== undefined) {
+          led.material.emissiveIntensity = 0.6
+        }
+      })
+    }
+
+    // Chair 360-degree damped swivel & seat cushion squish bounce
+    const chSwiv = clock - chairSwivelTime
+    if (chSwiv >= 0 && chSwiv < 1.4) {
+      const progress = chSwiv / 1.4
+      const s = getSpring(chSwiv, 1.4, 2.5, 2.0)
+      chairGroup.rotation.y = Math.sin(progress * Math.PI) * Math.PI
+      seat.scale.set(1 + s * 0.1, 1 - s * 0.15, 1 + s * 0.1)
+    } else {
+      chairGroup.rotation.y = 0
+      seat.scale.set(1, 1, 1)
+    }
+
+    // Window starlight glow flare & godray beam expansion
+    const winGl = clock - winGlowTime
+    if (winGl >= 0 && winGl < 2.0) {
+      const pulse = Math.sin((winGl / 2.0) * Math.PI)
+      godrayMat.opacity = 0.06 + pulse * 0.22
+      if ((skyPlane.material as any)?.emissive) {
+        ; (skyPlane.material as any).emissive.setHex(0x00f0ff)
+          ; (skyPlane.material as any).emissiveIntensity = pulse * 0.4
+      }
+    } else {
+      if ((skyPlane.material as any)?.emissive) {
+        ; (skyPlane.material as any).emissiveIntensity = 0
+      }
+    }
+
+    // Textbooks stack slide-out & spring bounce back
+    const bkShift = clock - booksShiftTime
+    if (bkShift >= 0 && bkShift < 1.2) {
+      const s = getSpring(bkShift, 1.2, 3, 2.5)
+      const b = getEaseOutBounce(bkShift, 1.2)
+      if (deskBooksGroup.children[2]) {
+        deskBooksGroup.children[2].position.x = b * 0.065
+        deskBooksGroup.children[2].position.y = 0.012 + 2 * 0.027 + b * 0.015
+        deskBooksGroup.children[2].rotation.y = s * 0.35
+        deskBooksGroup.children[2].scale.set(1 + s * 0.1, 1 - s * 0.08, 1 + s * 0.1)
+      }
+    } else {
+      if (deskBooksGroup.children[2]) {
+        deskBooksGroup.children[2].position.x = 0
+        deskBooksGroup.children[2].position.y = 0.012 + 2 * 0.027
+        deskBooksGroup.children[2].rotation.y = 0
+        deskBooksGroup.children[2].scale.set(1, 1, 1)
+      }
+    }
+
+    // Sticky note paper peel up, flutter wave & float animation
+    const stLift = clock - stickyLiftTime
+    if (stLift >= 0 && stLift < 1.2) {
+      const s = getSpring(stLift, 1.2, 3, 2.2)
+      const b = getEaseOutBounce(stLift, 1.2)
+      sticky.position.y = 0.768 + b * 0.045
+      sticky.rotation.z = 0.4 + s * 0.25
+      sticky.rotation.x = -Math.PI / 2 + s * 0.18
+      sticky.scale.set(1 + s * 0.15, 1 + s * 0.15, 1)
+    } else {
+      sticky.position.y = 0.768
+      sticky.rotation.z = 0.4
+      sticky.rotation.x = -Math.PI / 2
+      sticky.scale.set(1, 1, 1)
+    }
 
     // state logic (wall-clock based so durations hold even at low fps)
     if (state === 'intro') {
@@ -2094,9 +3525,9 @@ export async function initRoomScene(opts: RoomSceneOptions): Promise<RoomScene> 
       if (wake > 0.01 && wake < 0.99) {
         const flickerY = lerp(LAPTOP.screenH / 2, -LAPTOP.screenH / 2, wake)
         scanlineFlicker.position.y = 0.41 + flickerY
-        ;(scanlineFlicker.material as any).opacity = 0.6 * (1 - Math.abs(wake - 0.5) * 2)
+          ; (scanlineFlicker.material as any).opacity = 0.6 * (1 - Math.abs(wake - 0.5) * 2)
       } else {
-        ;(scanlineFlicker.material as any).opacity = 0
+        ; (scanlineFlicker.material as any).opacity = 0
       }
       if (t >= 1) {
         setState('seated')
@@ -2107,7 +3538,7 @@ export async function initRoomScene(opts: RoomSceneOptions): Promise<RoomScene> 
         renderer.domElement.style.cursor = 'default'
         screenMat.emissiveIntensity = 0.0 // hide backing glow (iframe covers it)
         screenSheen.visible = false // hide glass sheen (iframe is the live surface now)
-        ;(scanlineFlicker.material as any).opacity = 0 // hide scanline flicker
+          ; (scanlineFlicker.material as any).opacity = 0 // hide scanline flicker
       }
     } else if (state === 'seated') {
       // locked, very subtle breathing
@@ -2197,9 +3628,11 @@ export async function initRoomScene(opts: RoomSceneOptions): Promise<RoomScene> 
       renderer.domElement.removeEventListener('pointermove', onPointerMove)
       renderer.domElement.removeEventListener('click', onClick)
       unmountIframe()
+      stopLofiMusic()
+      if (audioCtx) { try { audioCtx.close() } catch { } }
       try {
         renderer.dispose()
-      } catch {}
+      } catch { }
       if (renderer.domElement.parentNode) renderer.domElement.parentNode.removeChild(renderer.domElement)
       if (cssRenderer.domElement.parentNode) cssRenderer.domElement.parentNode.removeChild(cssRenderer.domElement)
     },
@@ -2207,5 +3640,6 @@ export async function initRoomScene(opts: RoomSceneOptions): Promise<RoomScene> 
     stepBack,
     resize,
     startIntro,
+    toggleMusic,
   }
 }

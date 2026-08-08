@@ -29,6 +29,7 @@ export default function Home() {
   const [sceneState, setSceneState] = useState<SceneState>('loading')
   const [hovering, setHovering] = useState(false)
   const [a11yMode, setA11yMode] = useState(false)
+  const [tooltip, setTooltip] = useState<{ name: string; x: number; y: number } | null>(null)
   const reduced = usePrefersReducedMotion()
 
   // boot + init scene
@@ -50,6 +51,15 @@ export default function Home() {
       },
       onHover: (h) => {
         if (!cancelled) setHovering(h)
+      },
+      onTooltip: (name, x, y) => {
+        if (!cancelled) {
+          if (name && x !== undefined && y !== undefined) {
+            setTooltip({ name, x, y })
+          } else {
+            setTooltip(null)
+          }
+        }
       },
       onReady: () => {
         const elapsed = performance.now() - t0
@@ -187,16 +197,16 @@ export default function Home() {
                 textShadow: '0 2px 12px rgba(0,0,0,0.9)',
                 margin: 0,
                 animation: 'intro-fade-up 1.6s ease-out 0.3s both',
-              }}>ARI VEGA</p>
+              }}>AKSHITH SURYA</p>
               <h1 style={{
-                fontSize: 'clamp(2rem, 6vw, 4rem)',
+                fontSize: 'clamp(1.8rem, 5vw, 3.6rem)',
                 fontWeight: 300,
                 letterSpacing: '0.05em',
                 color: '#ffffff',
                 margin: '0.5rem 0',
                 textShadow: '0 4px 24px rgba(0,0,0,0.95), 0 0 60px rgba(0,0,0,0.8)',
                 animation: 'intro-fade-up 1.6s ease-out 0.5s both',
-              }}>Creative Developer</h1>
+              }}>Space Science & Hardware</h1>
               <div style={{
                 width: '48px',
                 height: '1px',
@@ -205,15 +215,15 @@ export default function Home() {
                 animation: 'intro-divider-grow 1s ease-out 0.9s both',
               }} />
               <p style={{
-                fontSize: '13px',
-                letterSpacing: '0.35em',
+                fontSize: '12px',
+                letterSpacing: '0.3em',
                 textTransform: 'uppercase',
-                color: 'rgba(255,255,255,0.8)',
+                color: 'rgba(255,255,255,0.85)',
                 fontFamily: 'monospace',
                 textShadow: '0 2px 12px rgba(0,0,0,0.9)',
                 margin: 0,
                 animation: 'intro-fade-up 1.6s ease-out 1.1s both',
-              }}>Step into the room</p>
+              }}>Space Science Student & Hardware Builder</p>
               <p style={{
                 fontSize: '10px',
                 letterSpacing: '0.3em',
@@ -225,6 +235,20 @@ export default function Home() {
               }}>click to skip</p>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Floating interactable object tooltip */}
+      {tooltip && !a11yMode && sceneState === 'idle' && (
+        <div
+          className="pointer-events-none fixed z-50 flex items-center gap-2.5 rounded-lg border border-purple-500/40 bg-[#090314]/90 px-4 py-2 font-mono text-xs text-purple-100 shadow-[0_0_24px_rgba(168,85,247,0.35)] backdrop-blur-md transition-all duration-75"
+          style={{
+            left: Math.min(typeof window !== 'undefined' ? window.innerWidth - 320 : 800, Math.max(16, tooltip.x + 16)),
+            top: Math.min(typeof window !== 'undefined' ? window.innerHeight - 60 : 600, Math.max(16, tooltip.y + 16)),
+          }}
+        >
+          <span className="h-2 w-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_#00f0ff]" />
+          <span className="tracking-wider">{tooltip.name}</span>
         </div>
       )}
 
@@ -287,9 +311,8 @@ export default function Home() {
       {/* Hover hint */}
       {!a11yMode && sceneState === 'idle' && (
         <div
-          className={`pointer-events-none absolute left-1/2 top-[58%] z-30 -translate-x-1/2 text-center transition-opacity duration-300 ${
-            hovering ? 'opacity-0' : 'opacity-100'
-          }`}
+          className={`pointer-events-none absolute left-1/2 top-[58%] z-30 -translate-x-1/2 text-center transition-opacity duration-300 ${hovering ? 'opacity-0' : 'opacity-100'
+            }`}
         >
           <p className="text-xs uppercase tracking-[0.4em] text-amber-200/60">click the laptop</p>
           <div className="mx-auto mt-2 h-6 w-px bg-gradient-to-b from-amber-200/50 to-transparent" />
@@ -327,12 +350,12 @@ export default function Home() {
         {a11yMode
           ? 'Accessible portfolio view.'
           : sceneState === 'seated'
-          ? 'You are now seated at the laptop. The portfolio is open and operable. Press Escape to step back.'
-          : sceneState === 'idle'
-          ? 'You are standing in a 3D room. Click the laptop to view the portfolio, or use the accessible mode button.'
-          : sceneState === 'intro'
-          ? 'Cinematic intro playing. Click to skip, or wait for the room to settle.'
-          : 'Loading 3D room.'}
+            ? 'You are now seated at the laptop. The portfolio is open and operable. Press Escape to step back.'
+            : sceneState === 'idle'
+              ? 'You are standing in a 3D room. Click the laptop to view the portfolio, or use the accessible mode button.'
+              : sceneState === 'intro'
+                ? 'Cinematic intro playing. Click to skip, or wait for the room to settle.'
+                : 'Loading 3D room.'}
       </p>
 
       <style jsx global>{`
