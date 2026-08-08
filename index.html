@@ -3,7 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Portfolio</title>
+  <title>Akshith Surya</title>
+  <meta name="description" content="Portfolio and projects by Akshith Surya">
+
+  <!-- Open Graph / link preview tags -->
+  <meta property="og:title" content="Akshith Surya">
+  <meta property="og:description" content="Portfolio and projects by Akshith Surya">
+  <meta property="og:image" content="https://project-rkh1w.vercel.app/preview.png">
+  <meta property="og:url" content="https://project-rkh1w.vercel.app/">
+  <meta property="og:type" content="website">
+
+  <!-- Twitter card fallback -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Akshith Surya">
+  <meta name="twitter:description" content="Portfolio and projects by Akshith Surya">
+
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -85,15 +99,12 @@
   </div>
 
   <script>
-    // Try to reach the Next.js dev server
     const check = () => {
       fetch('http://localhost:3000', { mode: 'no-cors', cache: 'no-store' })
         .then(() => {
-          // Server is up — redirect immediately
           window.location.href = 'http://localhost:3000';
         })
         .catch(() => {
-          // Server not running — show instructions
           document.getElementById('spinner').style.display = 'none';
           document.getElementById('title').textContent = 'Dev server is not running';
           document.getElementById('status').textContent = 'Start the server first, then come back here.';
