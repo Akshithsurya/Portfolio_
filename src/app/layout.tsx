@@ -7,19 +7,19 @@ const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
 });
-
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://project-rkh1w.vercel.app"),
   title: "Akshith Surya",
-
+  description: "Akshith Surya's personal portfolio",
   openGraph: {
     title: "Akshith Surya",
     description: "Akshith Surya's personal portfolio",
-    url: "https://project-rkhh.vercel.app",
+    url: "https://project-rkh1w.vercel.app",
     siteName: "Akshith Surya",
     type: "website",
   },
