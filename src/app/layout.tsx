@@ -14,19 +14,19 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Akshith surya",
+  title: "Akshith Surya",
 
   openGraph: {
-    title: "Z.ai Code Scaffold",
-    description: "AI-powered development with modern React stack",
-    url: "https://chat.z.ai",
-    siteName: "Z.ai",
+    title: "Akshith Surya",
+    description: "Akshith Surya's personal portfolio",
+    url: "https://project-rkhh.vercel.app",
+    siteName: "Akshith Surya",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Z.ai Code Scaffold",
-    description: "AI-powered development with modern React stack",
+    title: "Akshith Surya",
+    description: "Akshith Surya's personal portfolio",
   },
 };
 
