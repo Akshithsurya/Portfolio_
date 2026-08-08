@@ -115,13 +115,3 @@
     @apply bg-background text-foreground;
   }
 }
-
-/* Force-hide injected third-party widget/badge */
-[class*="zai" i],
-[id*="zai" i],
-[class*="z-ai" i],
-[id*="z-ai" i],
-iframe[src*="z-ai" i],
-iframe[src*="chatglm" i] {
-  display: none !important;
-}
