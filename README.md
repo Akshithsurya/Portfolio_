@@ -5,11 +5,16 @@
 <br />
 
 [![GitHub](https://img.shields.io/badge/GITHUB-000000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Akshithsurya)
+[![Portfolio](https://img.shields.io/badge/PORTFOLIO-D4AF37?style=for-the-badge&logo=vercel&logoColor=black)](https://akshith-surya-portfolio-ak.netlify.app/)
 [![Arivu](https://img.shields.io/badge/ARIVU-8B0000?style=for-the-badge&logo=readthedocs&logoColor=D4AF37)](https://arivu-pallakad.netlify.app)
 
 </div>
 
 ---
+
+## Live
+
+**[akshith-surya-portfolio-ak.netlify.app](https://akshith-surya-portfolio-ak.netlify.app/)** — walk into the room, click the laptop.
 
 ## What this is
 
@@ -54,6 +59,10 @@ Browser
 | DB layer | Prisma + SQLite — scaffolded, not used by the portfolio itself (see below) |
 | Deploy | Netlify, via `@netlify/plugin-nextjs` |
 | Package manager | npm (`package-lock.json`) and Bun (`bun.lock`) both present |
+
+<div align="center">
+<img src="https://skillicons.dev/icons?i=nextjs,react,ts,threejs,tailwind,prisma,sqlite&perline=7" alt="stack icons" />
+</div>
 
 ---
 
@@ -117,6 +126,8 @@ Netlify, per `netlify.toml`:
   package = "@netlify/plugin-nextjs"
 ```
 
+Live at **https://akshith-surya-portfolio-ak.netlify.app/**.
+
 Two candidate live URLs currently point at this project in different places (the profile README badge vs. metadata inside the repo) — worth confirming which one is the actual current deploy and removing the other before this README goes live:
 - `og:url` / `twitter` metadata in both `index.html` and `src/app/layout.tsx` still points to `https://project-rkh1w.vercel.app` — reads like a placeholder from an earlier Vercel-based scaffold, not the current Netlify domain.
 
@@ -158,6 +169,20 @@ None of this needs to block a deploy. It matters if this repo is ever going to b
 
 ---
 
+## Activity
+
 <div align="center">
+<img src="https://github-readme-activity-graph.vercel.app/graph?username=Akshithsurya&theme=react-dark&bg_color=00000000&color=D4AF37&line=D4AF37&point=8B0000&hide_border=true&area=true" alt="commit activity graph" width="100%" />
+</div>
+
+<div align="center">
+<img src="https://github-readme-stats.vercel.app/api?username=Akshithsurya&show_icons=true&theme=github_dark&hide_border=true&bg_color=00000000&title_color=D4AF37&icon_color=D4AF37" alt="GitHub stats" height="165" />
+<img src="https://streak-stats.demolab.com?user=Akshithsurya&theme=dark&hide_border=true&background=00000000&ring=D4AF37&fire=D4AF37&currStreakLabel=D4AF37" alt="GitHub streak" height="165" />
+</div>
+
+---
+
+<div align="center">
+<img src="https://capsule-render.vercel.app/api?type=cylinder&color=0:000000,100:8B0000&height=100&section=footer&animation=fadeIn" width="100%" />
 <sub>Palakkad, Kerala</sub>
 </div>
